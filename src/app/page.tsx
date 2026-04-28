@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import TripPanel from '@/components/TripPanel';
@@ -31,10 +31,10 @@ export default function Home() {
     localStorage.setItem('trip-stops', JSON.stringify(stops));
   }, [stops]);
 
-  const handleMapClick = (lng: number, lat: number) => {
+  const handleMapClick = useCallback((lng: number, lat: number) => {
     // We'll allow clicking anytime for now, but having the tool active is a good visual indicator
     setSelectedLocation({ lng, lat });
-  };
+  }, []);
 
   const handleSearchSelect = (lng: number, lat: number) => {
     setSelectedLocation({ lng, lat });

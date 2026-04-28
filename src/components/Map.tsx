@@ -21,28 +21,35 @@ export default function Map({ stops, selectedLocation, onMapClick }: MapProps) {
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
   const selectedMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
+  // Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapRef.current) return; // initialize map only once
+    if (mapRef.current) return;
 
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/dark-v11', // Premium Dark mode map style
-      center: [-0.1276, 51.5072], // Default center (London)
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [-0.1276, 51.5072],
       zoom: 12,
       pitch: 45,
       bearing: -17.6,
+      antialias: true, // Improves quality
     });
 
     mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     mapRef.current.on('click', (e) => {
-      const { lng, lat } = e.lngLat;
-      onMapClick(lng, lat);
+      onMapClick(e.lngLat.lng, e.lngLat.lat);
     });
 
-    // Clean up on unmount
+    // Handle initial sizing and container changes to fix "black area" glitch
+    const resizeObserver = new ResizeObserver(() => {
+      mapRef.current?.resize();
+    });
+    resizeObserver.observe(mapContainerRef.current);
+
     return () => {
+      resizeObserver.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
     };
@@ -50,55 +57,57 @@ export default function Map({ stops, selectedLocation, onMapClick }: MapProps) {
 
   // Handle selected location marker
   useEffect(() => {
-    if (!mapRef.current) return;
+    const map = mapRef.current;
+    if (!map) return;
 
     if (selectedLocation) {
       if (!selectedMarkerRef.current) {
-        // Create a pulsating marker element for the selected point
         const el = document.createElement('div');
         el.className = styles.selectedMarker;
-
         selectedMarkerRef.current = new mapboxgl.Marker(el)
           .setLngLat([selectedLocation.lng, selectedLocation.lat])
-          .addTo(mapRef.current);
+          .addTo(map);
       } else {
         selectedMarkerRef.current.setLngLat([selectedLocation.lng, selectedLocation.lat]);
       }
       
-      // Pan to selected location
-      mapRef.current.flyTo({
+      map.flyTo({
         center: [selectedLocation.lng, selectedLocation.lat],
         zoom: 14,
-        essential: true
+        essential: true,
+        duration: 1500 // Smooth pan
       });
-    } else {
-      if (selectedMarkerRef.current) {
-        selectedMarkerRef.current.remove();
-        selectedMarkerRef.current = null;
-      }
+    } else if (selectedMarkerRef.current) {
+      selectedMarkerRef.current.remove();
+      selectedMarkerRef.current = null;
     }
   }, [selectedLocation]);
 
-  // Handle saved stops markers
+  // Handle saved stops markers with better performance
   useEffect(() => {
-    if (!mapRef.current) return;
+    const map = mapRef.current;
+    if (!map) return;
 
-    // Remove old markers that are no longer in the stops list
-    const currentStopIds = stops.map(s => s.id);
+    // Sync markers
+    const currentStopIds = new Set(stops.map(s => s.id));
+    
+    // Remove markers that are no longer present
     Object.keys(markersRef.current).forEach(id => {
-      if (!currentStopIds.includes(id)) {
+      if (!currentStopIds.has(id)) {
         markersRef.current[id].remove();
         delete markersRef.current[id];
       }
     });
 
-    // Add new markers
+    // Add or update markers
     stops.forEach((stop, index) => {
-      if (!markersRef.current[stop.id]) {
-        // Create custom marker element
+      const existingMarker = markersRef.current[stop.id];
+      const label = (index + 1).toString();
+
+      if (!existingMarker) {
         const el = document.createElement('div');
         el.className = styles.stopMarker;
-        el.innerHTML = `<span>${index + 1}</span>`;
+        el.innerHTML = `<span>${label}</span>`;
 
         const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
           `<h3>${stop.title}</h3>${stop.description ? `<p>${stop.description}</p>` : ''}`
@@ -107,21 +116,22 @@ export default function Map({ stops, selectedLocation, onMapClick }: MapProps) {
         const marker = new mapboxgl.Marker(el)
           .setLngLat([stop.lng, stop.lat])
           .setPopup(popup)
-          .addTo(mapRef.current!);
+          .addTo(map);
 
         markersRef.current[stop.id] = marker;
       } else {
-        // Update number if order changed
-        const el = markersRef.current[stop.id].getElement();
-        el.innerHTML = `<span>${index + 1}</span>`;
+        const el = existingMarker.getElement();
+        if (el.innerText !== label) {
+          el.innerHTML = `<span>${label}</span>`;
+        }
       }
     });
 
-    // Fit map to markers if there are stops and no selection is active
-    if (stops.length > 0 && !selectedLocation) {
+    // Only fit bounds if no active selection and it's not the initial mount
+    if (stops.length > 0 && !selectedLocation && map.getZoom() < 3) {
       const bounds = new mapboxgl.LngLatBounds();
       stops.forEach(stop => bounds.extend([stop.lng, stop.lat]));
-      mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 15 });
+      map.fitBounds(bounds, { padding: 80, maxZoom: 15 });
     }
   }, [stops, selectedLocation]);
 
