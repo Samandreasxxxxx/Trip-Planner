@@ -11,8 +11,7 @@ import { TripStop } from '@/types';
 
 export default function Home() {
   const [stops, setStops] = useState<TripStop[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<{lng: number, lat: number} | null>(null);
-  const [activeTool, setActiveTool] = useState<'select' | 'pin'>('pin');
+  const [activeTool, setActiveTool] = useState<'select' | 'pin'>('select');
 
   // Load from local storage
   useEffect(() => {
@@ -31,54 +30,97 @@ export default function Home() {
     localStorage.setItem('trip-stops', JSON.stringify(stops));
   }, [stops]);
 
-  const handleMapClick = useCallback((lng: number, lat: number) => {
-    // We'll allow clicking anytime for now, but having the tool active is a good visual indicator
-    setSelectedLocation({ lng, lat });
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        setActiveTool('select');
+      } else if (e.altKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setActiveTool('pin');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSearchSelect = (lng: number, lat: number) => {
-    setSelectedLocation({ lng, lat });
-    setActiveTool('pin');
-  };
+  const handleMapClick = useCallback(async (lng: number, lat: number) => {
+    if (activeTool === 'select') return;
 
-  const addStop = (title: string, description: string) => {
-    if (!selectedLocation) return;
+    // Auto-add stop
+    const newId = crypto.randomUUID();
     
-    const newStop: TripStop = {
+    // Optimistic add with placeholder
+    setStops(prev => [...prev, {
+      id: newId,
+      lng,
+      lat,
+      title: 'Loading location...',
+      description: ''
+    }]);
+
+    // Reverse geocode to get a nice name
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+      const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&limit=1`);
+      const data = await res.json();
+      
+      const placeName = data.features?.[0]?.text || 'New Stop';
+      
+      setStops(prev => prev.map(stop => 
+        stop.id === newId ? { ...stop, title: placeName } : stop
+      ));
+    } catch (e) {
+      setStops(prev => prev.map(stop => 
+        stop.id === newId ? { ...stop, title: 'New Stop' } : stop
+      ));
+    }
+    
+    // Switch back to select mode after dropping a pin
+    setActiveTool('select');
+  }, [activeTool]);
+
+  const handleSearchSelect = (lng: number, lat: number, placeName: string) => {
+    // Auto-add from search
+    setStops(prev => [...prev, {
       id: crypto.randomUUID(),
-      lng: selectedLocation.lng,
-      lat: selectedLocation.lat,
-      title,
-      description
-    };
-    
-    setStops(prev => [...prev, newStop]);
-    setSelectedLocation(null);
+      lng,
+      lat,
+      title: placeName,
+      description: ''
+    }]);
   };
 
   const removeStop = (id: string) => {
     setStops(prev => prev.filter(stop => stop.id !== id));
   };
 
+  const updateStop = (id: string, updates: Partial<TripStop>) => {
+    setStops(prev => prev.map(stop => 
+      stop.id === id ? { ...stop, ...updates } : stop
+    ));
+  };
+
   return (
     <main className={styles.main}>
       <Sidebar />
+      {/* Moved TripPanel to the left, before MapArea */}
+      <TripPanel 
+        stops={stops} 
+        onRemoveStop={removeStop}
+        onUpdateStop={updateStop}
+      />
       <div className={styles.mapArea}>
         <SearchBar onSelect={handleSearchSelect} />
         <MapToolbar activeTool={activeTool} onToolChange={setActiveTool} />
         <Map 
           stops={stops} 
-          selectedLocation={selectedLocation} 
+          selectedLocation={null} 
           onMapClick={handleMapClick} 
         />
       </div>
-      <TripPanel 
-        stops={stops} 
-        selectedLocation={selectedLocation}
-        onAddStop={addStop}
-        onRemoveStop={removeStop}
-        onCancelSelection={() => setSelectedLocation(null)}
-      />
     </main>
   );
 }
