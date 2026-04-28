@@ -11,15 +11,21 @@ mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
 
 interface MapProps {
   stops: TripStop[];
-  selectedLocation: { lng: number; lat: number } | null;
+  focusLocation: { lng: number; lat: number; id: string } | null;
   onMapClick: (lng: number, lat: number) => void;
 }
 
-export default function Map({ stops, selectedLocation, onMapClick }: MapProps) {
+export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
   const selectedMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  
+  // Keep track of the latest callback without re-triggering effects
+  const onMapClickRef = useRef(onMapClick);
+  useEffect(() => {
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
 
   // Initialize Map
   useEffect(() => {
@@ -29,17 +35,17 @@ export default function Map({ stops, selectedLocation, onMapClick }: MapProps) {
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/dark-v11',
-      center: [-0.1276, 51.5072],
-      zoom: 12,
-      pitch: 45,
-      bearing: -17.6,
+      center: [78.9629, 20.5937], // India center
+      zoom: 4,
+      pitch: 0,
+      bearing: 0,
       antialias: true, // Improves quality
     });
 
     mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     mapRef.current.on('click', (e) => {
-      onMapClick(e.lngLat.lng, e.lngLat.lat);
+      onMapClickRef.current(e.lngLat.lng, e.lngLat.lat);
     });
 
     // Handle initial sizing and container changes to fix "black area" glitch
@@ -53,35 +59,20 @@ export default function Map({ stops, selectedLocation, onMapClick }: MapProps) {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [onMapClick]);
+  }, []); // Empty dependency array ensures Map initializes exactly once
 
-  // Handle selected location marker
+  // Handle flying to focused locations (from search or sidebar click)
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !focusLocation) return;
 
-    if (selectedLocation) {
-      if (!selectedMarkerRef.current) {
-        const el = document.createElement('div');
-        el.className = styles.selectedMarker;
-        selectedMarkerRef.current = new mapboxgl.Marker(el)
-          .setLngLat([selectedLocation.lng, selectedLocation.lat])
-          .addTo(map);
-      } else {
-        selectedMarkerRef.current.setLngLat([selectedLocation.lng, selectedLocation.lat]);
-      }
-      
-      map.flyTo({
-        center: [selectedLocation.lng, selectedLocation.lat],
-        zoom: 14,
-        essential: true,
-        duration: 1500 // Smooth pan
-      });
-    } else if (selectedMarkerRef.current) {
-      selectedMarkerRef.current.remove();
-      selectedMarkerRef.current = null;
-    }
-  }, [selectedLocation]);
+    map.flyTo({
+      center: [focusLocation.lng, focusLocation.lat],
+      zoom: 12,
+      essential: true,
+      duration: 1500
+    });
+  }, [focusLocation]);
 
   // Handle saved stops markers with better performance
   useEffect(() => {
@@ -128,12 +119,12 @@ export default function Map({ stops, selectedLocation, onMapClick }: MapProps) {
     });
 
     // Only fit bounds if no active selection and it's not the initial mount
-    if (stops.length > 0 && !selectedLocation && map.getZoom() < 3) {
+    if (stops.length > 0 && !focusLocation && map.getZoom() < 3) {
       const bounds = new mapboxgl.LngLatBounds();
       stops.forEach(stop => bounds.extend([stop.lng, stop.lat]));
       map.fitBounds(bounds, { padding: 80, maxZoom: 15 });
     }
-  }, [stops, selectedLocation]);
+  }, [stops, focusLocation]);
 
   return (
     <div className={styles.mapWrapper}>

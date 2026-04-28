@@ -12,6 +12,7 @@ import { TripStop } from '@/types';
 export default function Home() {
   const [stops, setStops] = useState<TripStop[]>([]);
   const [activeTool, setActiveTool] = useState<'select' | 'pin'>('select');
+  const [focusLocation, setFocusLocation] = useState<{lng: number, lat: number, id: string} | null>(null);
 
   // Load from local storage
   useEffect(() => {
@@ -84,13 +85,15 @@ export default function Home() {
 
   const handleSearchSelect = (lng: number, lat: number, placeName: string) => {
     // Auto-add from search
+    const newId = crypto.randomUUID();
     setStops(prev => [...prev, {
-      id: crypto.randomUUID(),
+      id: newId,
       lng,
       lat,
       title: placeName,
       description: ''
     }]);
+    setFocusLocation({ lng, lat, id: newId });
   };
 
   const removeStop = (id: string) => {
@@ -103,6 +106,10 @@ export default function Home() {
     ));
   };
 
+  const handleStopClick = (lng: number, lat: number, id: string) => {
+    setFocusLocation({ lng, lat, id });
+  };
+
   return (
     <main className={styles.main}>
       <Sidebar />
@@ -111,13 +118,14 @@ export default function Home() {
         stops={stops} 
         onRemoveStop={removeStop}
         onUpdateStop={updateStop}
+        onStopClick={handleStopClick}
       />
       <div className={styles.mapArea}>
         <SearchBar onSelect={handleSearchSelect} />
         <MapToolbar activeTool={activeTool} onToolChange={setActiveTool} />
         <Map 
           stops={stops} 
-          selectedLocation={null} 
+          focusLocation={focusLocation} 
           onMapClick={handleMapClick} 
         />
       </div>

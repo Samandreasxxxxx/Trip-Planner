@@ -8,12 +8,14 @@ interface TripPanelProps {
   stops: TripStop[];
   onRemoveStop: (id: string) => void;
   onUpdateStop: (id: string, updates: Partial<TripStop>) => void;
+  onStopClick: (lng: number, lat: number, id: string) => void;
 }
 
 export default function TripPanel({ 
   stops, 
   onRemoveStop,
-  onUpdateStop
+  onUpdateStop,
+  onStopClick
 }: TripPanelProps) {
 
   return (
@@ -47,15 +49,19 @@ export default function TripPanel({
                     <span>{distanceToPrev.toFixed(1)} km to next stop</span>
                   </div>
                 )}
-                <div className={styles.stopCard}>
+                <div 
+                  className={styles.stopCard} 
+                  onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
+                >
                   <div className={styles.stopNumber}>{index + 1}</div>
-                  <div className={styles.stopInfo}>
+                  <div className={styles.stopInfo} onClick={(e) => e.stopPropagation()}>
                     <input 
                       type="text"
                       className={styles.inlineInputTitle}
                       value={stop.title}
                       onChange={(e) => onUpdateStop(stop.id, { title: e.target.value })}
                       placeholder="Stop Name"
+                      onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
                     />
                     <textarea 
                       className={styles.inlineInputDesc}
@@ -63,11 +69,15 @@ export default function TripPanel({
                       onChange={(e) => onUpdateStop(stop.id, { description: e.target.value })}
                       placeholder="Add comments about this stop..."
                       rows={2}
+                      onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
                     />
                   </div>
                   <button 
                     className={styles.deleteButton}
-                    onClick={() => onRemoveStop(stop.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveStop(stop.id);
+                    }}
                     title="Remove Stop"
                   >
                     <Trash2 size={18} />
