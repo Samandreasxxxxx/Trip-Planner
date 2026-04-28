@@ -87,7 +87,7 @@
 }
 
 .formHeader h3 {
-  color: #a855f7;
+  color: #ff4b2b;
   font-size: 1.1rem;
   margin: 0;
 }
@@ -130,11 +130,11 @@
 
 .input:focus, .textarea:focus {
   outline: none;
-  border-color: #a855f7;
+  border-color: #ff4b2b;
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
   color: white;
   border: none;
   padding: 10px;
@@ -173,8 +173,8 @@
 }
 
 .stopNumber {
-  background: #2a2a35;
-  color: #a855f7;
+  background: #2a1515;
+  color: #ff4b2b;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -226,7 +226,7 @@
 
 .saveButton {
   width: 100%;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
   color: white;
   border: none;
   padding: 1rem;
@@ -235,8 +235,9 @@
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
 }
+
 
 .saveButton:hover {
   opacity: 0.9;

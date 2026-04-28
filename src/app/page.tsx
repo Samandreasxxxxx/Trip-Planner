@@ -4,14 +4,17 @@ import { useState, useEffect } from 'react';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import TripPanel from '@/components/TripPanel';
+import SearchBar from '@/components/SearchBar';
+import MapToolbar from '@/components/MapToolbar';
 import styles from './page.module.css';
 import { TripStop } from '@/types';
 
 export default function Home() {
   const [stops, setStops] = useState<TripStop[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<{lng: number, lat: number} | null>(null);
+  const [activeTool, setActiveTool] = useState<'select' | 'pin'>('pin');
 
-  // Load from local storage on mount so it works immediately without DB
+  // Load from local storage
   useEffect(() => {
     const saved = localStorage.getItem('trip-stops');
     if (saved) {
@@ -23,13 +26,19 @@ export default function Home() {
     }
   }, []);
 
-  // Save to local storage whenever stops change
+  // Save to local storage
   useEffect(() => {
     localStorage.setItem('trip-stops', JSON.stringify(stops));
   }, [stops]);
 
   const handleMapClick = (lng: number, lat: number) => {
+    // We'll allow clicking anytime for now, but having the tool active is a good visual indicator
     setSelectedLocation({ lng, lat });
+  };
+
+  const handleSearchSelect = (lng: number, lat: number) => {
+    setSelectedLocation({ lng, lat });
+    setActiveTool('pin');
   };
 
   const addStop = (title: string, description: string) => {
@@ -55,6 +64,8 @@ export default function Home() {
     <main className={styles.main}>
       <Sidebar />
       <div className={styles.mapArea}>
+        <SearchBar onSelect={handleSearchSelect} />
+        <MapToolbar activeTool={activeTool} onToolChange={setActiveTool} />
         <Map 
           stops={stops} 
           selectedLocation={selectedLocation} 

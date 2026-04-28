@@ -35,28 +35,28 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Custom Markers */
+/* Custom Red Markers */
 .selectedMarker {
-  width: 20px;
-  height: 20px;
-  background-color: #a855f7;
+  width: 22px;
+  height: 22px;
+  background-color: #ff3e3e; /* Vibrant Red */
   border-radius: 50%;
   border: 3px solid #fff;
-  box-shadow: 0 0 15px #a855f7, 0 0 0 5px rgba(168, 85, 247, 0.3);
-  animation: pulse 1.5s infinite;
+  box-shadow: 0 0 20px #ff3e3e, 0 0 0 5px rgba(255, 62, 62, 0.3);
+  animation: pulseRed 1.5s infinite;
   cursor: pointer;
 }
 
-@keyframes pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(168, 85, 247, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+@keyframes pulseRed {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 62, 62, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 62, 62, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 62, 62, 0); }
 }
 
 .stopMarker {
-  width: 30px;
-  height: 30px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ff4b2b, #ff416c); /* Premium Red Gradient */
   border-radius: 50%;
   border: 2px solid #fff;
   color: white;
@@ -65,22 +65,23 @@
   align-items: center;
   font-weight: bold;
   font-size: 14px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .stopMarker:hover {
-  transform: scale(1.1);
+  transform: scale(1.15) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 65, 108, 0.6);
   z-index: 10;
 }
 
 /* Mapbox Popup Overrides */
 :global(.mapboxgl-popup-content) {
-  background: rgba(30, 30, 35, 0.95) !important;
+  background: rgba(30, 20, 20, 0.95) !important; /* Slight red tint to dark background */
   backdrop-filter: blur(10px) !important;
   border-radius: 12px !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 80, 80, 0.2) !important;
   color: #fff !important;
   padding: 15px 20px !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
@@ -89,26 +90,26 @@
 :global(.mapboxgl-popup-content h3) {
   margin: 0 0 5px 0;
   font-size: 16px;
-  color: #a855f7;
+  color: #ff4b2b; /* Match red theme */
 }
 
 :global(.mapboxgl-popup-content p) {
   margin: 0;
   font-size: 14px;
-  color: #ccc;
+  color: #ddd;
 }
 
 :global(.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip) {
-  border-top-color: rgba(30, 30, 35, 0.95) !important;
+  border-top-color: rgba(30, 20, 20, 0.95) !important;
 }
 :global(.mapboxgl-popup-anchor-top .mapboxgl-popup-tip) {
-  border-bottom-color: rgba(30, 30, 35, 0.95) !important;
+  border-bottom-color: rgba(30, 20, 20, 0.95) !important;
 }
 :global(.mapboxgl-popup-anchor-left .mapboxgl-popup-tip) {
-  border-right-color: rgba(30, 30, 35, 0.95) !important;
+  border-right-color: rgba(30, 20, 20, 0.95) !important;
 }
 :global(.mapboxgl-popup-anchor-right .mapboxgl-popup-tip) {
-  border-left-color: rgba(30, 30, 35, 0.95) !important;
+  border-left-color: rgba(30, 20, 20, 0.95) !important;
 }
 :global(.mapboxgl-popup-close-button) {
   color: #fff !important;
