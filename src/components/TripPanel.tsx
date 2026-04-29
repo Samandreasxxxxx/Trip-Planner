@@ -155,7 +155,25 @@ export default function TripPanel({
     return unit === 'km' ? total : total * 0.621371;
   }, [stops, unit]);
 
-  const participants = activeTrip?.participants || [];
+  const stopDistances = useMemo(() => {
+    const distances: { [id: string]: number } = {};
+    stops.forEach((stop, index) => {
+      if (index === 0) {
+        distances[stop.id] = 0;
+      } else {
+        const d = calculateDistance(
+          stops[index - 1].lat,
+          stops[index - 1].lng,
+          stop.lat,
+          stop.lng
+        );
+        distances[stop.id] = unit === 'km' ? d : d * 0.621371;
+      }
+    });
+    return distances;
+  }, [stops, unit]);
+
+  const participants = useMemo(() => activeTrip?.participants || [], [activeTrip]);
 
   const balances = useMemo(() => {
     const bal: { [key: string]: number } = {};
@@ -607,24 +625,46 @@ export default function TripPanel({
             {showBudgetBreakdown && (
               <div className={styles.budgetBreakdownOverlay}>
                 <div className={styles.breakdownHeader}>
-                  <span>Cost Breakdown</span>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <PieChart size={16} />
+                    <span>Cost Breakdown</span>
+                  </div>
                   <button onClick={() => setShowBudgetBreakdown(false)}><X size={12} /></button>
                 </div>
-                {Object.entries(budgetBreakdown).map(([cat, amount]) => amount > 0 && (
-                  <div key={cat} className={styles.breakdownRow}>
-                    <span className={styles.breakdownCat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
-                    <div className={styles.breakdownBarWrapper}>
-                      <div 
-                        className={styles.breakdownBar} 
-                        style={{
-                          width: `${(amount / (totalBudget || 1)) * 100}%`,
-                          backgroundColor: cat === 'hotel' ? '#f59e0b' : cat === 'restaurant' ? '#ef4444' : cat === 'sightseeing' ? '#10b981' : cat === 'transport' ? '#3b82f6' : '#71717a'
-                        }}
-                      />
+                
+                <div className={styles.financialChart}>
+                  {Object.entries(budgetBreakdown).map(([cat, amount]) => amount > 0 && (
+                    <div 
+                      key={`segment-${cat}`}
+                      className={styles.chartSegment}
+                      style={{
+                        flex: amount,
+                        backgroundColor: cat === 'hotel' ? '#f59e0b' : cat === 'restaurant' ? '#ef4444' : cat === 'sightseeing' ? '#10b981' : cat === 'transport' ? '#3b82f6' : '#71717a'
+                      }}
+                      title={`${cat}: $${amount.toLocaleString()}`}
+                    />
+                  ))}
+                </div>
+
+                <div className={styles.breakdownList}>
+                  {Object.entries(budgetBreakdown).map(([cat, amount]) => amount > 0 && (
+                    <div key={cat} className={styles.breakdownRow}>
+                      <div className={styles.breakdownLabelWrapper}>
+                        <div 
+                          className={styles.categoryDot} 
+                          style={{ backgroundColor: cat === 'hotel' ? '#f59e0b' : cat === 'restaurant' ? '#ef4444' : cat === 'sightseeing' ? '#10b981' : cat === 'transport' ? '#3b82f6' : '#71717a' }}
+                        />
+                        <span className={styles.breakdownCat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                      </div>
+                      <span className={styles.breakdownAmount}>${amount.toLocaleString()}</span>
                     </div>
-                    <span className={styles.breakdownAmount}>${amount.toLocaleString()}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                
+                <div className={styles.totalBudgetFooter}>
+                  <span>Total Budget</span>
+                  <span>${totalBudget.toLocaleString()}</span>
+                </div>
               </div>
             )}
             {weather && (
@@ -704,6 +744,8 @@ export default function TripPanel({
                       moveStop={moveStop}
                       changeDay={changeDay}
                       participants={participants}
+                      distanceFromPrev={stopDistances[stop.id]}
+                      unit={unit}
                     />
                   ))}
                 </SortableContext>
@@ -788,6 +830,8 @@ interface SortableStopProps {
   moveStop: (id: string, direction: 'up' | 'down') => void;
   changeDay: (id: string, newDay: number) => void;
   participants: string[];
+  distanceFromPrev: number;
+  unit: 'km' | 'mi';
 }
 
 function SortableStop({ 
@@ -798,7 +842,9 @@ function SortableStop({
   onRemoveStop, 
   moveStop, 
   changeDay,
-  participants
+  participants,
+  distanceFromPrev,
+  unit
 }: SortableStopProps) {
   const {
     attributes,
@@ -854,6 +900,15 @@ function SortableStop({
             <ChevronDown size={14} />
           </button>
         </div>
+      </div>
+      
+      <div className={styles.stopConnector}>
+        <div className={styles.connectorLine}></div>
+        {distanceFromPrev > 0 && (
+          <div className={styles.distanceBadge}>
+            {distanceFromPrev.toFixed(1)} {unit}
+          </div>
+        )}
       </div>
       
       <div className={styles.stopInfo}>
