@@ -111,6 +111,12 @@ export default function Home() {
     setFocusLocation({ lng, lat, id });
   };
 
+  const clearAllStops = () => {
+    if (confirm('Are you sure you want to clear your entire itinerary?')) {
+      setStops([]);
+    }
+  };
+
   return (
     <main className={styles.main}>
       <Sidebar onToggleTripPanel={() => setShowTripPanel(!showTripPanel)} isPanelOpen={showTripPanel} />
@@ -121,6 +127,8 @@ export default function Home() {
         onRemoveStop={removeStop}
         onUpdateStop={updateStop}
         onStopClick={handleStopClick}
+        onReorderStops={setStops}
+        onClearAll={clearAllStops}
       />
       <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>
         <SearchBar onSelect={handleSearchSelect} />

@@ -1,7 +1,7 @@
 .panel {
   width: 400px;
   background: rgba(10, 10, 12, 0.85);
-  backdrop-filter: blur(24px);
+  backdrop-filter: blur(32px);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
@@ -29,6 +29,12 @@
   padding: 1.5rem 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.headerTop {
+  display: flex;
   justify-content: space-between;
   align-items: center;
 }
@@ -38,6 +44,60 @@
   font-weight: 700;
   color: #fff;
   letter-spacing: -0.02em;
+}
+
+.headerStats {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.statValue {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.statLabel {
+  color: #52525b;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.statDivider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 1.5rem;
+}
+
+.clearAllButton {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #52525b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.clearAllButton:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .closeButton {
@@ -70,10 +130,6 @@
   width: 4px;
 }
 
-.content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
 .content::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -104,7 +160,6 @@
 
 .emptyIcon {
   color: #6366f1;
-  opacity: 0.8;
 }
 
 .emptyState h3 {
@@ -112,20 +167,6 @@
   margin-bottom: 0.75rem;
   font-weight: 600;
   font-size: 1.1rem;
-}
-
-.emptyState p {
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.shortcut {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: #fff;
-  font-family: monospace;
-  font-size: 0.75rem;
 }
 
 /* Distance Indicator */
@@ -171,7 +212,7 @@
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
-  padding: 1.25rem;
+  padding: 1rem;
   display: flex;
   align-items: flex-start;
   gap: 1rem;
@@ -182,7 +223,14 @@
 .stopCard:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(99, 102, 241, 0.3);
-  transform: translateX(8px);
+  transform: translateX(4px);
+}
+
+.stopCardLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .stopNumber {
@@ -197,7 +245,33 @@
   font-weight: 700;
   font-size: 0.75rem;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.reorderButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reorderBtn {
+  background: transparent;
+  border: none;
+  color: #3f3f46;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+}
+
+.reorderBtn:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.reorderBtn:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
 }
 
 .stopInfo {
@@ -205,6 +279,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .inlineInputTitle {
@@ -216,7 +291,6 @@
   width: 100%;
   padding: 0;
   outline: none;
-  font-family: inherit;
 }
 
 .inlineInputDesc {
@@ -224,12 +298,10 @@
   border: none;
   color: #71717a;
   font-size: 0.8rem;
-  line-height: 1.4;
   width: 100%;
   padding: 0;
   outline: none;
   resize: none;
-  font-family: inherit;
 }
 
 .deleteButton {
@@ -250,25 +322,37 @@
 .footer {
   padding: 1.5rem 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.01);
 }
 
 .saveButton {
   width: 100%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: #6366f1;
   color: white;
   border: none;
   padding: 0.875rem;
   border-radius: 12px;
-  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+  transition: all 0.3s;
 }
 
 .saveButton:hover {
+  background: #4f46e5;
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(99, 102, 241, 0.3);
-  filter: brightness(1.1);
+}
+
+@media print {
+  .panel {
+    position: static;
+    width: 100%;
+    background: white;
+    color: black;
+    box-shadow: none;
+  }
+  .closeButton, .reorderButtons, .deleteButton, .footer, .clearAllButton {
+    display: none !important;
+  }
+  .title, .statValue, .inlineInputTitle, .inlineInputDesc {
+    color: black !important;
+  }
 }

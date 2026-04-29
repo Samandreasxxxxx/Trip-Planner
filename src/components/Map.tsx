@@ -19,7 +19,6 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
-  const selectedMarkerRef = useRef<mapboxgl.Marker | null>(null);
   
   // Keep track of the latest callback without re-triggering effects
   const onMapClickRef = useRef(onMapClick);
@@ -39,16 +38,49 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
       zoom: 4,
       pitch: 0,
       bearing: 0,
-      antialias: true, // Improves quality
+      antialias: true,
     });
 
     mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    mapRef.current.on('load', () => {
+      const map = mapRef.current;
+      if (!map) return;
+
+      // Add route source and layer
+      map.addSource('route', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: []
+          }
+        }
+      });
+
+      map.addLayer({
+        id: 'route',
+        type: 'line',
+        source: 'route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#6366f1',
+          'line-width': 4,
+          'line-opacity': 0.6,
+          'line-dasharray': [2, 1]
+        }
+      });
+    });
 
     mapRef.current.on('click', (e) => {
       onMapClickRef.current(e.lngLat.lng, e.lngLat.lat);
     });
 
-    // Handle initial sizing and container changes to fix "black area" glitch
     const resizeObserver = new ResizeObserver(() => {
       mapRef.current?.resize();
     });
@@ -59,9 +91,9 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, []); // Empty dependency array ensures Map initializes exactly once
+  }, []);
 
-  // Handle flying to focused locations (from search or sidebar click)
+  // Handle flying to focused locations
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !focusLocation) return;
@@ -74,15 +106,36 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
     });
   }, [focusLocation]);
 
-  // Handle saved stops markers with better performance
+  // Handle markers and route line
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Sync markers
+    // 1. Update Route Line
+    const updateRoute = () => {
+      const source = map.getSource('route') as mapboxgl.GeoJSONSource;
+      if (!source) return;
+
+      const coordinates = stops.map(s => [s.lng, s.lat]);
+      source.setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates
+        }
+      });
+    };
+
+    if (map.isStyleLoaded()) {
+      updateRoute();
+    } else {
+      map.once('idle', updateRoute);
+    }
+
+    // 2. Sync markers
     const currentStopIds = new Set(stops.map(s => s.id));
     
-    // Remove markers that are no longer present
     Object.keys(markersRef.current).forEach(id => {
       if (!currentStopIds.has(id)) {
         markersRef.current[id].remove();
@@ -90,7 +143,6 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
       }
     });
 
-    // Add or update markers
     stops.forEach((stop, index) => {
       const existingMarker = markersRef.current[stop.id];
       const label = (index + 1).toString();
@@ -115,10 +167,10 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
         if (el.innerText !== label) {
           el.innerHTML = `<span>${label}</span>`;
         }
+        existingMarker.setLngLat([stop.lng, stop.lat]);
       }
     });
 
-    // Only fit bounds if no active selection and it's not the initial mount
     if (stops.length > 0 && !focusLocation && map.getZoom() < 3) {
       const bounds = new mapboxgl.LngLatBounds();
       stops.forEach(stop => bounds.extend([stop.lng, stop.lat]));
