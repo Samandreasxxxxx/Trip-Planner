@@ -30,7 +30,162 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  position: relative;
+}
+
+.tripSelectorSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -0.5rem;
+}
+
+.tripNameWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.tripNameWrapper:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.tripIcon {
+  color: #6366f1;
+}
+
+.tripName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  flex: 1;
+}
+
+.selectorArrow {
+  color: #52525b;
+  transition: transform 0.3s ease;
+}
+
+.arrowOpen {
+  transform: rotate(180deg);
+}
+
+.renameBtn {
+  background: transparent;
+  border: none;
+  color: #3f3f46;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.renameBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.renameWrapper {
+  flex: 1;
+}
+
+.renameInput {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 12px;
+  width: 100%;
+  outline: none;
+}
+
+.tripDropdown {
+  position: absolute;
+  top: 4.5rem;
+  left: 2rem;
+  right: 2rem;
+  background: #1a1a1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  z-index: 100;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+}
+
+.tripOption {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #a1a1aa;
+  font-size: 0.9rem;
+}
+
+.tripOption:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+}
+
+.activeTrip {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  font-weight: 600;
+}
+
+.deleteTripBtn {
+  background: transparent;
+  border: none;
+  color: #52525b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tripOption:hover .deleteTripBtn {
+  opacity: 1;
+}
+
+.deleteTripBtn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.createNewTripBtn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: #6366f1;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.createNewTripBtn:hover {
+  background: rgba(99, 102, 241, 0.05);
 }
 
 .headerTop {
@@ -352,6 +507,40 @@
   transform: translateX(4px);
 }
 
+.dragging {
+  border-color: #6366f1 !important;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3) !important;
+}
+
+.thumbnailWrapper {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.stopCard:hover .thumbnail {
+  transform: scale(1.1);
+}
+
+.categoryBadge {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  z-index: 2;
+  transform: scale(0.8);
+}
+
 .stopCardLeft {
   display: flex;
   flex-direction: column;
@@ -483,6 +672,37 @@
   border-radius: 4px;
   width: fit-content;
   outline: none;
+}
+
+.costWrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  gap: 2px;
+}
+
+.costIcon {
+  color: #10b981;
+}
+
+.costInput {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 40px;
+  outline: none;
+  padding: 0;
+}
+
+.costInput::-webkit-inner-spin-button,
+.costInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .footer {

@@ -1,3 +1,5 @@
+export type TravelMode = 'driving' | 'walking' | 'cycling';
+
 export interface TripStop {
   id: string;
   lng: number;
@@ -7,4 +9,12 @@ export interface TripStop {
   dayNumber: number;
   startTime?: string;
   category?: 'hotel' | 'restaurant' | 'sightseeing' | 'transport' | 'other';
+  cost?: number;
+}
+
+export interface Trip {
+  id: string;
+  name: string;
+  stops: TripStop[];
+  createdAt: number;
 }

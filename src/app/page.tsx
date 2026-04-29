@@ -7,33 +7,72 @@ import TripPanel from '@/components/TripPanel';
 import SearchBar from '@/components/SearchBar';
 import MapToolbar from '@/components/MapToolbar';
 import styles from './page.module.css';
-import { TripStop } from '@/types';
+import { TripStop, TravelMode, Trip } from '@/types';
 
 export default function Home() {
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [activeTripId, setActiveTripId] = useState<string | null>(null);
   const [stops, setStops] = useState<TripStop[]>([]);
   const [activeTool, setActiveTool] = useState<'select' | 'pin'>('select');
   const [focusLocation, setFocusLocation] = useState<{lng: number, lat: number, id: string} | null>(null);
   const [showTripPanel, setShowTripPanel] = useState(true);
   const [unit, setUnit] = useState<'km' | 'mi'>('km');
+  const [travelMode, setTravelMode] = useState<TravelMode>('driving');
   
   const mapRef = useRef<MapRef>(null);
 
   // Load from local storage
   useEffect(() => {
-    const saved = localStorage.getItem('trip-stops');
-    if (saved) {
+    const savedTrips = localStorage.getItem('trip-planner-trips');
+    if (savedTrips) {
       try {
-        setStops(JSON.parse(saved));
+        const parsed = JSON.parse(savedTrips);
+        setTrips(parsed);
+        if (parsed.length > 0) {
+          setActiveTripId(parsed[0].id);
+          setStops(parsed[0].stops);
+        } else {
+          // Create initial trip if none exist
+          const initialTrip: Trip = {
+            id: crypto.randomUUID(),
+            name: 'My First Trip',
+            stops: [],
+            createdAt: Date.now()
+          };
+          setTrips([initialTrip]);
+          setActiveTripId(initialTrip.id);
+        }
       } catch (e) {
-        console.error('Failed to parse stops from local storage');
+        console.error('Failed to parse trips');
       }
+    } else {
+      // Initialize if empty
+      const initialTrip: Trip = {
+        id: crypto.randomUUID(),
+        name: 'My First Trip',
+        stops: [],
+        createdAt: Date.now()
+      };
+      setTrips([initialTrip]);
+      setActiveTripId(initialTrip.id);
     }
   }, []);
 
-  // Save to local storage
+  // Save active stops to the trips array
   useEffect(() => {
-    localStorage.setItem('trip-stops', JSON.stringify(stops));
-  }, [stops]);
+    if (activeTripId) {
+      setTrips(prev => prev.map(t => 
+        t.id === activeTripId ? { ...t, stops } : t
+      ));
+    }
+  }, [stops, activeTripId]);
+
+  // Save all trips to local storage
+  useEffect(() => {
+    if (trips.length > 0) {
+      localStorage.setItem('trip-planner-trips', JSON.stringify(trips));
+    }
+  }, [trips]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -121,6 +160,44 @@ export default function Home() {
     }
   };
 
+  const handleSelectTrip = (id: string) => {
+    const trip = trips.find(t => t.id === id);
+    if (trip) {
+      setActiveTripId(id);
+      setStops(trip.stops);
+    }
+  };
+
+  const handleCreateTrip = () => {
+    const name = prompt('Enter trip name:');
+    if (name) {
+      const newTrip: Trip = {
+        id: crypto.randomUUID(),
+        name,
+        stops: [],
+        createdAt: Date.now()
+      };
+      setTrips(prev => [...prev, newTrip]);
+      setActiveTripId(newTrip.id);
+      setStops([]);
+    }
+  };
+
+  const handleDeleteTrip = (id: string) => {
+    if (trips.length <= 1) {
+      alert('You must have at least one trip.');
+      return;
+    }
+    if (confirm('Are you sure you want to delete this trip?')) {
+      const newTrips = trips.filter(t => t.id !== id);
+      setTrips(newTrips);
+      if (activeTripId === id) {
+        setActiveTripId(newTrips[0].id);
+        setStops(newTrips[0].stops);
+      }
+    }
+  };
+
   return (
     <main className={styles.main}>
       <Sidebar onToggleTripPanel={() => setShowTripPanel(!showTripPanel)} isPanelOpen={showTripPanel} />
@@ -135,6 +212,12 @@ export default function Home() {
         onClearAll={clearAllStops}
         unit={unit}
         onUnitToggle={() => setUnit(prev => prev === 'km' ? 'mi' : 'km')}
+        trips={trips}
+        activeTripId={activeTripId || ''}
+        onSelectTrip={handleSelectTrip}
+        onCreateTrip={handleCreateTrip}
+        onDeleteTrip={handleDeleteTrip}
+        onRenameTrip={(id, name) => setTrips(prev => prev.map(t => t.id === id ? { ...t, name } : t))}
         getMapScreenshot={() => mapRef.current ? mapRef.current.getScreenshot() : Promise.resolve('')}
       />
       <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>
@@ -144,12 +227,15 @@ export default function Home() {
           onToolChange={setActiveTool} 
           onFly={() => mapRef.current?.startFlyover()}
           hasStops={stops.length > 0}
+          travelMode={travelMode}
+          onTravelModeChange={setTravelMode}
         />
         <Map 
           ref={mapRef}
           stops={stops} 
           focusLocation={focusLocation} 
           onMapClick={handleMapClick} 
+          travelMode={travelMode}
         />
       </div>
     </main>

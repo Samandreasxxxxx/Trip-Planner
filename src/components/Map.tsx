@@ -4,7 +4,7 @@ import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import styles from './Map.module.css';
-import { TripStop } from '@/types';
+import { TripStop, TravelMode } from '@/types';
 import { fetchDirections } from '@/utils/directions';
 
 // Set the access token from your environment variables
@@ -14,6 +14,7 @@ interface MapProps {
   stops: TripStop[];
   focusLocation: { lng: number; lat: number; id: string } | null;
   onMapClick: (lng: number, lat: number) => void;
+  travelMode: TravelMode;
 }
 
 export interface MapRef {
@@ -21,7 +22,7 @@ export interface MapRef {
   startFlyover: () => void;
 }
 
-const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, ref) => {
+const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, travelMode }, ref) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
@@ -214,7 +215,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
       }
 
       const rawCoords = stops.map(s => [s.lng, s.lat] as [number, number]);
-      const pathCoords = await fetchDirections(rawCoords);
+      const pathCoords = await fetchDirections(rawCoords, travelMode);
 
       if (isSubscribed) {
         source.setData({

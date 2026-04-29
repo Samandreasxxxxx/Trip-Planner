@@ -5,9 +5,10 @@ import styles from './TripPanel.module.css';
 import { 
   MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, 
   Trash, Download, Copy, Loader2, Check, Calendar, Plus,
-  Bed, Utensils, Camera, Car, HelpCircle, Clock
+  Bed, Utensils, Camera, Car, HelpCircle, Clock, DollarSign,
+  FolderOpen, Edit2, X
 } from 'lucide-react';
-import { TripStop } from '@/types';
+import { TripStop, Trip } from '@/types';
 import { calculateDistance } from '@/utils/distance';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -40,6 +41,12 @@ interface TripPanelProps {
   onClearAll: () => void;
   unit: 'km' | 'mi';
   onUnitToggle: () => void;
+  trips: Trip[];
+  activeTripId: string;
+  onSelectTrip: (id: string) => void;
+  onCreateTrip: () => void;
+  onDeleteTrip: (id: string) => void;
+  onRenameTrip: (id: string, name: string) => void;
   getMapScreenshot: () => Promise<string>;
 }
 
@@ -54,12 +61,27 @@ export default function TripPanel({
   onClearAll,
   unit,
   onUnitToggle,
+  trips,
+  activeTripId,
+  onSelectTrip,
+  onCreateTrip,
+  onDeleteTrip,
+  onRenameTrip,
   getMapScreenshot
 }: TripPanelProps) {
 
   const [isExporting, setIsExporting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showTripSelector, setShowTripSelector] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [editingName, setEditingName] = useState('');
+
+  const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
+
+  React.useEffect(() => {
+    if (activeTrip) setEditingName(activeTrip.name);
+  }, [activeTrip]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -93,6 +115,10 @@ export default function TripPanel({
     }
     return unit === 'km' ? total : total * 0.621371;
   }, [stops, unit]);
+
+  const totalBudget = useMemo(() => {
+    return stops.reduce((sum, stop) => sum + (stop.cost || 0), 0);
+  }, [stops]);
 
   const moveStop = (id: string, direction: 'up' | 'down') => {
     const index = stops.findIndex(s => s.id === id);
@@ -278,6 +304,71 @@ export default function TripPanel({
   return (
     <div className={`${styles.panel} ${isOpen ? styles.open : styles.closed}`}>
       <div className={styles.header}>
+        <div className={styles.tripSelectorSection}>
+          {isRenaming ? (
+            <div className={styles.renameWrapper}>
+              <input 
+                autoFocus
+                className={styles.renameInput}
+                value={editingName}
+                onChange={(e) => setEditingName(e.target.value)}
+                onBlur={() => {
+                  onRenameTrip(activeTripId, editingName);
+                  setIsRenaming(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onRenameTrip(activeTripId, editingName);
+                    setIsRenaming(false);
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <div className={styles.tripNameWrapper} onClick={() => setShowTripSelector(!showTripSelector)}>
+              <FolderOpen size={16} className={styles.tripIcon} />
+              <h3 className={styles.tripName}>{activeTrip?.name || 'My Trip'}</h3>
+              <ChevronDown size={14} className={`${styles.selectorArrow} ${showTripSelector ? styles.arrowOpen : ''}`} />
+            </div>
+          )}
+          
+          <button className={styles.renameBtn} onClick={() => setIsRenaming(!isRenaming)}>
+            <Edit2 size={14} />
+          </button>
+        </div>
+
+        {showTripSelector && (
+          <div className={styles.tripDropdown}>
+            {trips.map(trip => (
+              <div 
+                key={trip.id} 
+                className={`${styles.tripOption} ${trip.id === activeTripId ? styles.activeTrip : ''}`}
+                onClick={() => {
+                  onSelectTrip(trip.id);
+                  setShowTripSelector(false);
+                }}
+              >
+                <span>{trip.name}</span>
+                {trips.length > 1 && (
+                  <button 
+                    className={styles.deleteTripBtn}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteTrip(trip.id);
+                    }}
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button className={styles.createNewTripBtn} onClick={() => { onCreateTrip(); setShowTripSelector(false); }}>
+              <Plus size={14} />
+              <span>New Trip</span>
+            </button>
+          </div>
+        )}
+
         <div className={styles.headerTop}>
           <h2 className={styles.title}>Your Trip Plan</h2>
           <div className={styles.headerActions}>
@@ -323,6 +414,11 @@ export default function TripPanel({
               <span className={styles.statValue}>{days.length}</span>
               <span className={styles.statLabel}>Days</span>
             </div>
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>${totalBudget.toLocaleString()}</span>
+              <span className={styles.statLabel}>Budget</span>
+            </div>
+            <div className={styles.statDivider}></div>
             <button className={styles.clearAllButton} onClick={onClearAll} title="Clear All">
               <Trash size={16} />
             </button>
@@ -453,11 +549,21 @@ function SortableStop({
     <div 
       ref={setNodeRef} 
       style={style} 
-      className={styles.stopCard} 
+      className={`${styles.stopCard} ${isDragging ? styles.dragging : ''}`} 
       onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
     >
+      <div className={styles.thumbnailWrapper}>
+        <img 
+          src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${stop.lng},${stop.lat},14,0/80x80@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`} 
+          alt={stop.title}
+          className={styles.thumbnail}
+        />
+        <div className={styles.categoryBadge}>
+          <CategoryIcon category={stop.category} />
+        </div>
+      </div>
+      
       <div className={styles.stopCardLeft} {...attributes} {...listeners} style={{cursor: 'grab'}}>
-        <CategoryIcon category={stop.category} />
         <div className={styles.reorderButtons}>
           <button 
             disabled={globalIndex === 0} 
@@ -485,7 +591,19 @@ function SortableStop({
             onChange={(e) => onUpdateStop(stop.id, { startTime: e.target.value })}
             onClick={(e) => e.stopPropagation()}
           />
-          <div style={{display: 'flex', gap: '4px'}}>
+          <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+            <div className={styles.costWrapper}>
+              <DollarSign size={10} className={styles.costIcon} />
+              <input 
+                type="number" 
+                className={styles.costInput}
+                value={stop.cost || ''}
+                placeholder="0"
+                onChange={(e) => onUpdateStop(stop.id, { cost: parseFloat(e.target.value) || 0 })}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            <div style={{display: 'flex', gap: '4px'}}>
              <button 
               className={styles.reorderBtn}
               onClick={(e) => { e.stopPropagation(); changeDay(stop.id, stop.dayNumber - 1); }}

@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapPin, MousePointer2, Plane } from 'lucide-react';
+import { MapPin, MousePointer2, Plane, Car, Footprints, Bike } from 'lucide-react';
+import { TravelMode } from '@/types';
 import styles from './MapToolbar.module.css';
 
 interface MapToolbarProps {
@@ -7,9 +7,18 @@ interface MapToolbarProps {
   onToolChange: (tool: 'select' | 'pin') => void;
   onFly: () => void;
   hasStops: boolean;
+  travelMode: TravelMode;
+  onTravelModeChange: (mode: TravelMode) => void;
 }
 
-export default function MapToolbar({ activeTool, onToolChange }: MapToolbarProps) {
+export default function MapToolbar({ 
+  activeTool, 
+  onToolChange, 
+  onFly, 
+  hasStops,
+  travelMode,
+  onTravelModeChange
+}: MapToolbarProps) {
   return (
     <div className={styles.toolbar}>
       <button 
@@ -38,6 +47,32 @@ export default function MapToolbar({ activeTool, onToolChange }: MapToolbarProps
         title="3D Flyover Preview"
       >
         <Plane size={22} />
+      </button>
+
+      <div className={styles.divider}></div>
+
+      <button 
+        className={`${styles.toolButton} ${travelMode === 'driving' ? styles.active : ''}`}
+        onClick={() => onTravelModeChange('driving')}
+        title="Driving Mode"
+      >
+        <Car size={20} />
+      </button>
+
+      <button 
+        className={`${styles.toolButton} ${travelMode === 'walking' ? styles.active : ''}`}
+        onClick={() => onTravelModeChange('walking')}
+        title="Walking Mode"
+      >
+        <Footprints size={20} />
+      </button>
+
+      <button 
+        className={`${styles.toolButton} ${travelMode === 'cycling' ? styles.active : ''}`}
+        onClick={() => onTravelModeChange('cycling')}
+        title="Cycling Mode"
+      >
+        <Bike size={20} />
       </button>
     </div>
   );

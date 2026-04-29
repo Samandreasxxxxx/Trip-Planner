@@ -3,7 +3,10 @@
  * @param coordinates Array of [longitude, latitude] pairs.
  * @returns Array of coordinates representing the path.
  */
-export async function fetchDirections(coordinates: [number, number][]): Promise<[number, number][]> {
+export async function fetchDirections(
+  coordinates: [number, number][], 
+  profile: 'driving' | 'walking' | 'cycling' = 'driving'
+): Promise<[number, number][]> {
   if (coordinates.length < 2) return [];
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -21,7 +24,7 @@ export async function fetchDirections(coordinates: [number, number][]): Promise<
 
   try {
     const response = await fetch(
-      `https://api.mapbox.com/directions/v5/mapbox/driving/${coordsString}?geometries=geojson&access_token=${token}&overview=full`
+      `https://api.mapbox.com/directions/v5/mapbox/${profile}/${coordsString}?geometries=geojson&access_token=${token}&overview=full`
     );
 
     if (!response.ok) {
