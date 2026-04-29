@@ -1,0 +1,88 @@
+
+> trip-planner@0.1.0 lint
+> eslint
+
+
+C:\Users\hp\Trip_planner\Trip-Planner\src\app\page.tsx
+  25:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\hp\Trip_planner\Trip-Planner\src\app\page.tsx:25:9
+  23 |     if (saved) {
+  24 |       try {
+> 25 |         setStops(JSON.parse(saved));
+     |         ^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |       } catch (e) {
+  27 |         console.error('Failed to parse stops from local storage');
+  28 |       }  react-hooks/set-state-in-effect
+  26:16  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  81:14  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+
+C:\Users\hp\Trip_planner\Trip-Planner\src\components\Map.tsx
+  23:13  error  Component definition is missing display name  react/display-name
+
+C:\Users\hp\Trip_planner\Trip-Planner\src\components\SearchBar.tsx
+  39:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\hp\Trip_planner\Trip-Planner\src\components\SearchBar.tsx:39:7
+  37 |   useEffect(() => {
+  38 |     if (query.length < 2) {
+> 39 |       setResults([]);
+     |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  40 |       setShowDropdown(false);
+  41 |       return;
+  42 |     }  react-hooks/set-state-in-effect
+
+C:\Users\hp\Trip_planner\Trip-Planner\src\components\TripPanel.tsx
+    6:19  warning  'Navigation' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+    7:52  warning  'Plus' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+    8:43  warning  'Clock' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   84:43  warning  'index' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  182:45  warning  'index' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  278:48  warning  'index' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  450:27  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\hp\Trip_planner\Trip-Planner\src\components\TripPanel.tsx:450:27
+  448 |   const [desc, setDesc] = useState(stop.description || '');
+  449 |
+> 450 |   React.useEffect(() => { setTitle(stop.title); }, [stop.title]);
+      |                           ^^^^^^^^ Avoid calling setState() directly within an effect
+  451 |   React.useEffect(() => { setDesc(stop.description || ''); }, [stop.description]);
+  452 |
+  453 |   return (                react-hooks/set-state-in-effect
+  451:27  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\hp\Trip_planner\Trip-Planner\src\components\TripPanel.tsx:451:27
+  449 |
+  450 |   React.useEffect(() => { setTitle(stop.title); }, [stop.title]);
+> 451 |   React.useEffect(() => { setDesc(stop.description || ''); }, [stop.description]);
+      |                           ^^^^^^^ Avoid calling setState() directly within an effect
+  452 |
+  453 |   return (
+  454 |     <div className={styles.stopInfo} onClick={(e) => e.stopPropagation()}>  react-hooks/set-state-in-effect
+
+✖ 13 problems (5 errors, 8 warnings)
+
