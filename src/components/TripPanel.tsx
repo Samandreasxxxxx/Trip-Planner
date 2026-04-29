@@ -17,6 +17,7 @@ interface TripPanelProps {
   onStopClick: (lng: number, lat: number, id: string) => void;
   onReorderStops: (stops: TripStop[]) => void;
   onClearAll: () => void;
+  getMapScreenshot: () => Promise<string>;
 }
 
 export default function TripPanel({ 
@@ -27,7 +28,8 @@ export default function TripPanel({
   onUpdateStop,
   onStopClick,
   onReorderStops,
-  onClearAll
+  onClearAll,
+  getMapScreenshot
 }: TripPanelProps) {
 
   const [isExporting, setIsExporting] = useState(false);
@@ -78,14 +80,32 @@ export default function TripPanel({
 
     try {
       const mapContainer = document.querySelector('.mapboxgl-map') as HTMLElement;
-      if (!mapContainer) throw new Error("Map container not found");
+      const mapCanvas = document.querySelector('.mapboxgl-canvas') as HTMLCanvasElement;
+      if (!mapContainer || !mapCanvas) throw new Error("Map container not found");
 
-      // Capture map with html2canvas to include markers
+      const mapDataUrl = await getMapScreenshot();
+      
+      const tempImg = document.createElement('img');
+      tempImg.src = mapDataUrl;
+      tempImg.style.position = 'absolute';
+      tempImg.style.top = '0';
+      tempImg.style.left = '0';
+      tempImg.style.width = '100%';
+      tempImg.style.height = '100%';
+      tempImg.style.zIndex = '0';
+      
+      mapCanvas.style.opacity = '0';
+      mapContainer.insertBefore(tempImg, mapContainer.firstChild);
+
       const canvas = await html2canvas(mapContainer, {
         useCORS: true,
         allowTaint: true,
         logging: false,
+        backgroundColor: '#0a0a0c'
       });
+
+      mapCanvas.style.opacity = '1';
+      tempImg.remove();
 
       const imgData = canvas.toDataURL('image/jpeg', 0.8);
       
@@ -256,24 +276,11 @@ export default function TripPanel({
                       </button>
                     </div>
                   </div>
-                  <div className={styles.stopInfo} onClick={(e) => e.stopPropagation()}>
-                    <input 
-                      type="text"
-                      className={styles.inlineInputTitle}
-                      value={stop.title}
-                      onChange={(e) => onUpdateStop(stop.id, { title: e.target.value })}
-                      placeholder="Stop Name"
-                      onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
-                    />
-                    <textarea 
-                      className={styles.inlineInputDesc}
-                      value={stop.description || ''}
-                      onChange={(e) => onUpdateStop(stop.id, { description: e.target.value })}
-                      placeholder="Add notes, times, or details..."
-                      rows={1}
-                      onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
-                    />
-                  </div>
+                  <StopInputs 
+                    stop={stop} 
+                    onUpdateStop={onUpdateStop} 
+                    onStopClick={onStopClick} 
+                  />
                   <button 
                     className={styles.deleteButton}
                     onClick={(e) => {
@@ -312,6 +319,46 @@ export default function TripPanel({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function StopInputs({ 
+  stop, 
+  onUpdateStop, 
+  onStopClick 
+}: { 
+  stop: TripStop; 
+  onUpdateStop: (id: string, updates: Partial<TripStop>) => void;
+  onStopClick: (lng: number, lat: number, id: string) => void;
+}) {
+  const [title, setTitle] = useState(stop.title);
+  const [desc, setDesc] = useState(stop.description || '');
+
+  // Keep synced if updated externally (like from reverse geocoding)
+  React.useEffect(() => { setTitle(stop.title); }, [stop.title]);
+  React.useEffect(() => { setDesc(stop.description || ''); }, [stop.description]);
+
+  return (
+    <div className={styles.stopInfo} onClick={(e) => e.stopPropagation()}>
+      <input 
+        type="text"
+        className={styles.inlineInputTitle}
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onBlur={() => onUpdateStop(stop.id, { title })}
+        placeholder="Stop Name"
+        onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
+      />
+      <textarea 
+        className={styles.inlineInputDesc}
+        value={desc}
+        onChange={(e) => setDesc(e.target.value)}
+        onBlur={() => onUpdateStop(stop.id, { description: desc })}
+        placeholder="Add notes, times, or details..."
+        rows={1}
+        onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
+      />
     </div>
   );
 }

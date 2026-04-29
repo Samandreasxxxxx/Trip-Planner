@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import styles from './Map.module.css';
@@ -15,11 +15,27 @@ interface MapProps {
   onMapClick: (lng: number, lat: number) => void;
 }
 
-export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
+export interface MapRef {
+  getScreenshot: () => Promise<string>;
+}
+
+const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, ref) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
   
+  useImperativeHandle(ref, () => ({
+    getScreenshot: () => new Promise<string>((resolve) => {
+      const map = mapRef.current;
+      if (!map) return resolve('');
+      
+      map.once('render', () => {
+        resolve(map.getCanvas().toDataURL('image/png'));
+      });
+      map.triggerRepaint();
+    })
+  }));
+
   // Keep track of the latest callback without re-triggering effects
   const onMapClickRef = useRef(onMapClick);
   useEffect(() => {
@@ -39,7 +55,6 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
       pitch: 0,
       bearing: 0,
       antialias: true,
-      preserveDrawingBuffer: true, // Required for capturing map screenshots
     });
 
     mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -189,4 +204,6 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
       <div ref={mapContainerRef} className={styles.mapContainer} />
     </div>
   );
-}
+});
+
+export default Map;

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import Map from '@/components/Map';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import Map, { MapRef } from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import TripPanel from '@/components/TripPanel';
 import SearchBar from '@/components/SearchBar';
@@ -14,6 +14,8 @@ export default function Home() {
   const [activeTool, setActiveTool] = useState<'select' | 'pin'>('select');
   const [focusLocation, setFocusLocation] = useState<{lng: number, lat: number, id: string} | null>(null);
   const [showTripPanel, setShowTripPanel] = useState(true);
+  
+  const mapRef = useRef<MapRef>(null);
 
   // Load from local storage
   useEffect(() => {
@@ -79,9 +81,6 @@ export default function Home() {
         stop.id === newId ? { ...stop, title: 'New Stop' } : stop
       ));
     }
-    
-    // Switch back to select mode after dropping a pin
-    setActiveTool('select');
   }, [activeTool]);
 
   const handleSearchSelect = (lng: number, lat: number, placeName: string) => {
@@ -129,11 +128,13 @@ export default function Home() {
         onStopClick={handleStopClick}
         onReorderStops={setStops}
         onClearAll={clearAllStops}
+        getMapScreenshot={() => mapRef.current ? mapRef.current.getScreenshot() : Promise.resolve('')}
       />
       <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>
         <SearchBar onSelect={handleSearchSelect} />
         <MapToolbar activeTool={activeTool} onToolChange={setActiveTool} />
         <Map 
+          ref={mapRef}
           stops={stops} 
           focusLocation={focusLocation} 
           onMapClick={handleMapClick} 
