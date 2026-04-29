@@ -57,7 +57,7 @@
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   border-radius: 14px;
   padding: 8px;
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
 }
 
 .nav {

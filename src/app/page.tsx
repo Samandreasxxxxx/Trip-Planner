@@ -129,14 +129,16 @@ export default function Home() {
     // Auto-add stop
     const newId = crypto.randomUUID();
     
-    // Optimistic add with placeholder
+    const lastStop = stops[stops.length - 1];
+    const dayNumber = lastStop ? lastStop.dayNumber : 1;
+
     setStops(prev => [...prev, {
       id: newId,
       lng,
       lat,
       title: 'Loading location...',
       description: '',
-      dayNumber: 1,
+      dayNumber: dayNumber,
       category: 'other'
     }]);
 

@@ -8,7 +8,7 @@ import {
   Bed, Utensils, Camera, Car, HelpCircle, DollarSign,
   FolderOpen, Edit2, X, Wand2, Sparkles, Share2,
   PieChart, Link as LinkIcon, ExternalLink,
-  Users, Receipt
+  Users, Receipt, Calendar, Navigation, CloudSun, Thermometer
 } from 'lucide-react';
 import { TripStop, Trip } from '@/types';
 import { calculateDistance } from '@/utils/distance';
@@ -344,7 +344,7 @@ export default function TripPanel({
 
         pdf.setFontSize(14);
         pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(99, 102, 241);
+        pdf.setTextColor(249, 115, 22);
         pdf.text(`Day ${dayNum}`, 15, yPos);
         yPos += 10;
 
@@ -639,7 +639,11 @@ export default function TripPanel({
               </>
             )}
             <div className={styles.statDivider}></div>
-            <button className={styles.clearAllButton} onClick={onClearAll} title="Clear All">
+            <button className={styles.clearAllButton} onClick={() => {
+              if (window.confirm('Clear all stops from this adventure?')) {
+                onClearAll();
+              }
+            }} title="Clear All">
               <Trash size={16} />
             </button>
           </div>
@@ -699,6 +703,7 @@ export default function TripPanel({
                       onRemoveStop={onRemoveStop}
                       moveStop={moveStop}
                       changeDay={changeDay}
+                      participants={participants}
                     />
                   ))}
                 </SortableContext>
@@ -782,6 +787,7 @@ interface SortableStopProps {
   onRemoveStop: (id: string) => void;
   moveStop: (id: string, direction: 'up' | 'down') => void;
   changeDay: (id: string, newDay: number) => void;
+  participants: string[];
 }
 
 function SortableStop({ 
@@ -791,7 +797,8 @@ function SortableStop({
   onUpdateStop, 
   onRemoveStop, 
   moveStop, 
-  changeDay 
+  changeDay,
+  participants
 }: SortableStopProps) {
   const {
     attributes,
@@ -905,6 +912,7 @@ function SortableStop({
           stop={stop} 
           onUpdateStop={onUpdateStop} 
           onStopClick={onStopClick} 
+          participants={participants}
         />
         
         <div className={styles.categoryGrid}>
@@ -969,11 +977,13 @@ function CategoryButton({ active, onClick, icon, title }: { active: boolean, onC
 function StopInputs({ 
   stop, 
   onUpdateStop, 
-  onStopClick 
+  onStopClick,
+  participants
 }: { 
   stop: TripStop; 
   onUpdateStop: (id: string, updates: Partial<TripStop>) => void;
   onStopClick: (lng: number, lat: number, id: string) => void;
+  participants: string[];
 }) {
   const [title, setTitle] = useState(stop.title);
   const [desc, setDesc] = useState(stop.description || '');
@@ -1009,6 +1019,19 @@ function StopInputs({
           placeholder="Stop Name"
           onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
         />
+        {participants.length > 0 && (
+          <select 
+            className={styles.paidBySelect}
+            value={stop.paidBy || ''}
+            onChange={(e) => onUpdateStop(stop.id, { paidBy: e.target.value })}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <option value="">Paid by...</option>
+            {participants.map(p => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {showEmojiPicker && (

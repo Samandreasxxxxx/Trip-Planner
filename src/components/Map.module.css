@@ -25,7 +25,7 @@
   backdrop-filter: blur(12px);
   padding: 2rem 3rem;
   border-radius: 1rem;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(249, 115, 22, 0.3);
   text-align: center;
   color: #fff;
   font-weight: 500;
@@ -36,18 +36,18 @@
 .selectedMarker {
   width: 22px;
   height: 22px;
-  background-color: #6366f1;
+  background-color: var(--accent-primary);
   border-radius: 50%;
   border: 3px solid #fff;
-  box-shadow: 0 0 20px #6366f1, 0 0 0 5px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 20px var(--accent-primary), 0 0 0 5px rgba(249, 115, 22, 0.3);
   animation: pulseIndigo 1.5s infinite;
   cursor: pointer;
 }
 
 @keyframes pulseIndigo {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
 }
 
 .stopMarker {
@@ -68,7 +68,7 @@
 
 .stopMarker:hover {
   transform: scale(1.2) translateY(-4px) rotate(5deg);
-  box-shadow: 0 12px 25px rgba(99, 102, 241, 0.6);
+  box-shadow: 0 12px 25px rgba(249, 115, 22, 0.6);
   z-index: 10;
 }
 
@@ -120,4 +120,42 @@
 :global(.mapboxgl-popup-close-button:hover) {
   color: #fff !important;
   background-color: transparent !important;
+}
+
+.customPopup :global(.mapboxgl-popup-content) {
+  background: var(--bg-dark);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  color: #fff;
+}
+
+.customPopup :global(.mapboxgl-popup-tip) {
+  border-top-color: var(--glass-border);
+}
+
+.popupContent {
+  padding: 12px;
+}
+
+.popupContent h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.popupCat {
+  font-size: 10px;
+  color: var(--accent-primary);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.popupContent p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }

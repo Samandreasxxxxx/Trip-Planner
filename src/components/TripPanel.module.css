@@ -57,11 +57,11 @@
 
 .tripNameWrapper:hover {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
 .tripIcon {
-  color: #6366f1;
+  color: var(--accent-primary);
 }
 
 .tripName {
@@ -101,8 +101,8 @@
 }
 
 .renameInput {
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.4);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 600;
@@ -143,8 +143,8 @@
 }
 
 .activeTrip {
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--accent-primary);
   font-weight: 600;
 }
 
@@ -174,7 +174,7 @@
   background: rgba(255, 255, 255, 0.02);
   border: none;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  color: #6366f1;
+  color: var(--accent-primary);
   font-weight: 600;
   font-size: 0.85rem;
   display: flex;
@@ -186,7 +186,7 @@
 }
 
 .createNewTripBtn:hover {
-  background: rgba(99, 102, 241, 0.05);
+  background: rgba(249, 115, 22, 0.05);
 }
 
 .headerTop {
@@ -220,8 +220,8 @@
 }
 
 .shortcutsOverlay {
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.2);
   border-radius: 12px;
   padding: 1rem;
   display: flex;
@@ -458,7 +458,7 @@
 .emptyIconWrapper {
   width: 80px;
   height: 80px;
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(249, 115, 22, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -467,7 +467,7 @@
 }
 
 .emptyIcon {
-  color: #6366f1;
+  color: var(--accent-primary);
 }
 
 .emptyState h3 {
@@ -493,12 +493,12 @@
   top: -10px;
   bottom: -10px;
   width: 2px;
-  background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.3), transparent);
+  background: linear-gradient(to bottom, transparent, rgba(249, 115, 22, 0.3), transparent);
 }
 
 .distanceBadge {
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.2);
   color: #818cf8;
   padding: 4px 10px;
   border-radius: 20px;
@@ -535,15 +535,15 @@
 .dayTitle {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #6366f1;
+  color: var(--accent-primary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
 .addDayBtn {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(249, 115, 22, 0.1);
   color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(249, 115, 22, 0.2);
   padding: 4px 12px;
   border-radius: 6px;
   font-size: 0.7rem;
@@ -553,7 +553,7 @@
 }
 
 .addDayBtn:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(249, 115, 22, 0.2);
   color: #fff;
 }
 
@@ -600,7 +600,7 @@
 
 .stopCard:hover {
   background: var(--card-hover);
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(249, 115, 22, 0.3);
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
@@ -636,8 +636,8 @@
 }
 
 .dragging {
-  border-color: #6366f1 !important;
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3) !important;
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3) !important;
 }
 
 .thumbnailWrapper {
@@ -693,7 +693,7 @@
 }
 
 .stopNumber {
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: #fff;
   width: 24px;
   height: 24px;
@@ -854,9 +854,9 @@
 }
 
 .categoryBtn.active {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.3);
-  color: #6366f1;
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: var(--accent-primary);
 }
 
 .timeInput {
@@ -957,7 +957,7 @@
 }
 
 .exportBtn {
-  background: #6366f1;
+  background: var(--accent-primary);
   color: white;
   flex: 1;
 }
@@ -965,7 +965,7 @@
 .exportBtn:hover:not(:disabled) {
   background: #4f46e5;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
 }
 
 .calendarBtn {
@@ -1017,8 +1017,8 @@
 .linkItem {
   display: flex;
   align-items: center;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.2);
   border-radius: 6px;
   padding: 4px 8px;
   gap: 6px;
@@ -1072,8 +1072,8 @@
 }
 
 .expenseSplitterOverlay {
-  background: rgba(99, 102, 241, 0.05);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(249, 115, 22, 0.05);
+  border: 1px solid rgba(249, 115, 22, 0.2);
   border-radius: 12px;
   padding: 1rem;
   display: flex;
@@ -1095,7 +1095,7 @@
 }
 
 .participantTag {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(249, 115, 22, 0.2);
   color: #818cf8;
   padding: 2px 8px;
   border-radius: 4px;

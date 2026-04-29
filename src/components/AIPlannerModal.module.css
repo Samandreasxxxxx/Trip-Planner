@@ -50,7 +50,7 @@
 }
 
 .icon {
-  color: #a855f7;
+  color: var(--accent-secondary);
 }
 
 .header h2 {

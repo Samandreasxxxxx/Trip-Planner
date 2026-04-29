@@ -26,6 +26,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
+  const requestRef = useRef<number>(0);
   
   useImperativeHandle(ref, () => ({
     getScreenshot: () => new Promise<string>((resolve) => {
@@ -82,6 +83,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
   useEffect(() => {
     if (!mapContainerRef.current) return;
     if (mapRef.current) return;
+    if (!mapboxgl.accessToken) return;
 
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -156,7 +158,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
           'line-cap': 'round'
         },
         paint: {
-          'line-color': '#6366f1',
+          'line-color': '#f97316',
           'line-width': 4,
           'line-opacity': 0.8
         }
@@ -200,6 +202,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
     // 1. Update Route Line
     let isSubscribed = true;
     const updateRoute = async () => {
+      const requestId = ++requestRef.current;
       const source = map.getSource('route') as mapboxgl.GeoJSONSource;
       if (!source) return;
 
@@ -216,6 +219,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
 
       const rawCoords = stops.map(s => [s.lng, s.lat] as [number, number]);
       const pathCoords = await fetchDirections(rawCoords, travelMode);
+      if (requestId !== requestRef.current) return;
 
       if (isSubscribed) {
         source.setData({
@@ -255,7 +259,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
           case 'restaurant': return '#ef4444';
           case 'sightseeing': return '#10b981';
           case 'transport': return '#3b82f6';
-          default: return '#6366f1';
+          default: return '#f97316';
         }
       };
 
@@ -267,10 +271,15 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
         el.style.boxShadow = `0 8px 20px ${color}66`;
         el.innerHTML = `<span>${label}</span>`;
 
-        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-          `<h3>${stop.title}</h3>
-           ${stop.category ? `<div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">${stop.category}</div>` : ''}
-           ${stop.description ? `<p>${stop.description}</p>` : ''}`
+        const popup = new mapboxgl.Popup({ 
+          offset: 25,
+          className: styles.customPopup
+        }).setHTML(
+          `<div class="${styles.popupContent}">
+            <h3>${stop.title}</h3>
+            ${stop.category ? `<div class="${styles.popupCat}">${stop.category}</div>` : ''}
+            ${stop.description ? `<p>${stop.description}</p>` : ''}
+          </div>`
         );
 
         const marker = new mapboxgl.Marker(el)
