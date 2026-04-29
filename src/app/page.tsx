@@ -8,6 +8,8 @@ import SearchBar from '@/components/SearchBar';
 import MapToolbar from '@/components/MapToolbar';
 import styles from './page.module.css';
 import { TripStop, TravelMode, Trip } from '@/types';
+import { optimizeRoute } from '@/utils/optimization';
+import { supabase } from '@/lib/supabase';
 
 export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -21,8 +23,39 @@ export default function Home() {
   
   const mapRef = useRef<MapRef>(null);
 
-  // Load from local storage
+  // Load from local storage or URL
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedTripId = urlParams.get('trip');
+
+    const loadSharedTrip = async (id: string) => {
+      const { data, error } = await supabase
+        .from('shared_trips')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (data && !error) {
+        const sharedTrip: Trip = {
+          id: data.id,
+          name: data.name + ' (Shared)',
+          stops: data.stops,
+          createdAt: data.created_at
+        };
+        setStops(data.stops);
+        setTrips(prev => [sharedTrip, ...prev]);
+        setActiveTripId(data.id);
+        
+        // Remove query param to avoid re-loading on refresh if they switch trips
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+
+    if (sharedTripId) {
+      loadSharedTrip(sharedTripId);
+      return;
+    }
+
     const savedTrips = localStorage.getItem('trip-planner-trips');
     if (savedTrips) {
       try {
@@ -198,6 +231,51 @@ export default function Home() {
     }
   };
 
+  const handleOptimizeDay = async (dayNum: number) => {
+    const dayStops = stops.filter(s => s.dayNumber === dayNum);
+    if (dayStops.length < 3) return;
+
+    const optimized = await optimizeRoute(dayStops);
+    
+    setStops(prev => {
+      const newStops = [...prev];
+      // Find the first occurrence of a stop from this day to maintain position in the global list
+      const startIdx = newStops.findIndex(s => s.dayNumber === dayNum);
+      const count = newStops.filter(s => s.dayNumber === dayNum).length;
+      newStops.splice(startIdx, count, ...optimized);
+      return newStops;
+    });
+  };
+
+  const handleShareTrip = async () => {
+    const activeTrip = trips.find(t => t.id === activeTripId);
+    if (!activeTrip) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('shared_trips')
+        .insert([
+          { 
+            name: activeTrip.name, 
+            stops: stops 
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        const url = `${window.location.origin}/?trip=${data.id}`;
+        await navigator.clipboard.writeText(url);
+        return url;
+      }
+    } catch (e) {
+      console.error('Failed to share trip:', e);
+      alert('Failed to share trip. Make sure your Supabase table "shared_trips" exists.');
+    }
+    return null;
+  };
+
   return (
     <main className={styles.main}>
       <Sidebar onToggleTripPanel={() => setShowTripPanel(!showTripPanel)} isPanelOpen={showTripPanel} />
@@ -218,6 +296,8 @@ export default function Home() {
         onCreateTrip={handleCreateTrip}
         onDeleteTrip={handleDeleteTrip}
         onRenameTrip={(id, name) => setTrips(prev => prev.map(t => t.id === id ? { ...t, name } : t))}
+        onOptimizeDay={handleOptimizeDay}
+        onShareTrip={handleShareTrip}
         getMapScreenshot={() => mapRef.current ? mapRef.current.getScreenshot() : Promise.resolve('')}
       />
       <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>

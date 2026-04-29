@@ -6,7 +6,7 @@ import {
   MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, 
   Trash, Download, Copy, Loader2, Check, Calendar, Plus,
   Bed, Utensils, Camera, Car, HelpCircle, Clock, DollarSign,
-  FolderOpen, Edit2, X
+  FolderOpen, Edit2, X, Wand2, Sparkles, Share2
 } from 'lucide-react';
 import { TripStop, Trip } from '@/types';
 import { calculateDistance } from '@/utils/distance';
@@ -47,6 +47,8 @@ interface TripPanelProps {
   onCreateTrip: () => void;
   onDeleteTrip: (id: string) => void;
   onRenameTrip: (id: string, name: string) => void;
+  onOptimizeDay: (dayNum: number) => void;
+  onShareTrip: () => Promise<string | null>;
   getMapScreenshot: () => Promise<string>;
 }
 
@@ -67,6 +69,8 @@ export default function TripPanel({
   onCreateTrip,
   onDeleteTrip,
   onRenameTrip,
+  onOptimizeDay,
+  onShareTrip,
   getMapScreenshot
 }: TripPanelProps) {
 
@@ -76,6 +80,9 @@ export default function TripPanel({
   const [showTripSelector, setShowTripSelector] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [editingName, setEditingName] = useState('');
+  const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
 
@@ -128,6 +135,16 @@ export default function TripPanel({
     
     [newStops[index], newStops[targetIndex]] = [newStops[targetIndex], newStops[index]];
     onReorderStops(newStops);
+  };
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    const link = await onShareTrip();
+    if (link) {
+      setShareLink(link);
+      setTimeout(() => setShareLink(null), 5000);
+    }
+    setIsSharing(false);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -447,6 +464,22 @@ export default function TripPanel({
               <div key={dayNum} className={styles.daySection}>
                 <div className={styles.dayHeader}>
                   <div className={styles.dayTitle}>Day {dayNum}</div>
+                  {groupedStops[dayNum].length > 2 && (
+                    <button 
+                      className={styles.optimizeBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOptimizingDay(dayNum);
+                        onOptimizeDay(dayNum);
+                        setTimeout(() => setOptimizingDay(null), 2000);
+                      }}
+                      disabled={optimizingDay === dayNum}
+                      title="Optimize Route for this Day"
+                    >
+                      {optimizingDay === dayNum ? <Loader2 size={12} className={styles.spin} /> : <Sparkles size={12} />}
+                      <span>Optimize</span>
+                    </button>
+                  )}
                 </div>
                 
                 <SortableContext 
@@ -471,7 +504,6 @@ export default function TripPanel({
           </div>
         </DndContext>
       </div>
-      </div>
 
       {stops.length > 0 && (
         <div className={styles.footer}>
@@ -482,6 +514,15 @@ export default function TripPanel({
               title="Copy as text"
             >
               {isCopied ? <Check size={18} /> : <Copy size={18} />}
+            </button>
+            <button 
+              className={`${styles.actionButton} ${styles.shareBtn}`} 
+              onClick={handleShare}
+              disabled={isSharing || stops.length === 0}
+              title="Share Trip"
+            >
+              {shareLink ? <Check size={18} /> : isSharing ? <Loader2 size={18} className={styles.spin} /> : <Share2 size={18} />}
+              <span>{shareLink ? 'Link Copied!' : isSharing ? 'Sharing...' : 'Share Trip'}</span>
             </button>
             <button 
               className={`${styles.actionButton} ${styles.exportBtn}`} 

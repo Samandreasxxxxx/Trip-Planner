@@ -489,6 +489,34 @@
   color: #fff;
 }
 
+.optimizeBtn {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.optimizeBtn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.2);
+  color: #fff;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.optimizeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .stopCard {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -743,6 +771,20 @@
 
 .copyBtn:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.shareBtn {
+  background: rgba(139, 92, 246, 0.1);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  flex: 1;
+}
+
+.shareBtn:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.2);
+  color: #fff;
+  border-color: rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
 }
 
 .exportBtn {
