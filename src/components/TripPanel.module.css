@@ -1,17 +1,18 @@
 .panel {
-  width: 400px;
-  background: rgba(10, 10, 12, 0.85);
-  backdrop-filter: blur(32px);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  width: 420px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px);
+  border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   z-index: 90;
-  box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 20px 0 80px rgba(0, 0, 0, 0.4);
+  transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: absolute;
-  left: 80px;
-  top: 0;
-  bottom: 0;
+  left: 100px;
+  top: 1rem;
+  bottom: 1rem;
+  border-radius: var(--radius-lg);
 }
 
 .panel.closed {
@@ -585,21 +586,53 @@
 }
 
 .stopCard {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  padding: 1.25rem;
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
+  gap: 1.25rem;
+  transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .stopCard:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--card-hover);
   border-color: rgba(99, 102, 241, 0.3);
-  transform: translateX(4px);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.stopCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent-primary);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stopCard:hover::before {
+  opacity: 1;
+}
+
+.stopThumbnail {
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transition: transform 0.5s;
+}
+
+.stopCard:hover .stopThumbnail {
+  transform: scale(1.1) rotate(2deg);
 }
 
 .dragging {
@@ -704,7 +737,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -712,18 +745,20 @@
   background: transparent;
   border: none;
   color: #fff;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
   width: 100%;
   padding: 0;
   outline: none;
+  letter-spacing: -0.02em;
 }
 
 .inlineInputDesc {
   background: transparent;
   border: none;
-  color: #71717a;
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
   width: 100%;
   padding: 0;
   outline: none;
