@@ -1,10 +1,12 @@
 import React from 'react';
 import styles from './TripPanel.module.css';
-import { MapPin, Trash2, Navigation } from 'lucide-react';
+import { MapPin, Trash2, Navigation, ChevronLeft } from 'lucide-react';
 import { TripStop } from '@/types';
 import { calculateDistance } from '@/utils/distance';
 
 interface TripPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
   stops: TripStop[];
   onRemoveStop: (id: string) => void;
   onUpdateStop: (id: string, updates: Partial<TripStop>) => void;
@@ -12,6 +14,8 @@ interface TripPanelProps {
 }
 
 export default function TripPanel({ 
+  isOpen,
+  onClose,
   stops, 
   onRemoveStop,
   onUpdateStop,
@@ -19,17 +23,22 @@ export default function TripPanel({
 }: TripPanelProps) {
 
   return (
-    <div className={styles.panel}>
+    <div className={`${styles.panel} ${isOpen ? styles.open : styles.closed}`}>
       <div className={styles.header}>
         <h2 className={styles.title}>Your Trip Plan</h2>
+        <button className={styles.closeButton} onClick={onClose}>
+          <ChevronLeft size={20} />
+        </button>
       </div>
 
       <div className={styles.content}>
         {stops.length === 0 && (
           <div className={styles.emptyState}>
-            <MapPin size={48} className={styles.emptyIcon} />
+            <div className={styles.emptyIconWrapper}>
+              <MapPin size={40} className={styles.emptyIcon} />
+            </div>
             <h3>No stops added yet</h3>
-            <p>Press Alt+A to select the Pin tool, then click the map to add a stop.</p>
+            <p>Press <span className={styles.shortcut}>Alt + A</span> to select the Pin tool, then click the map to add a stop.</p>
           </div>
         )}
 
@@ -45,8 +54,11 @@ export default function TripPanel({
               <React.Fragment key={stop.id}>
                 {index > 0 && (
                   <div className={styles.distanceIndicator}>
-                    <Navigation size={14} />
-                    <span>{distanceToPrev.toFixed(1)} km to next stop</span>
+                    <div className={styles.line}></div>
+                    <div className={styles.distanceBadge}>
+                      <Navigation size={12} />
+                      <span>{distanceToPrev.toFixed(1)} km</span>
+                    </div>
                   </div>
                 )}
                 <div 
@@ -67,8 +79,8 @@ export default function TripPanel({
                       className={styles.inlineInputDesc}
                       value={stop.description || ''}
                       onChange={(e) => onUpdateStop(stop.id, { description: e.target.value })}
-                      placeholder="Add comments about this stop..."
-                      rows={2}
+                      placeholder="Add comments..."
+                      rows={1}
                       onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
                     />
                   </div>
@@ -80,7 +92,7 @@ export default function TripPanel({
                     }}
                     title="Remove Stop"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </React.Fragment>

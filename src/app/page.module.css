@@ -2,18 +2,21 @@
   display: flex;
   width: 100vw;
   height: 100vh;
-  background-color: var(--bg-dark);
+  background-color: #0a0a0c;
   position: relative;
+  overflow: hidden;
 }
 
 .mapArea {
   flex: 1;
-  padding: 1rem;
   display: flex;
   position: relative;
-  /* background: url('/globe.svg') no-repeat center center;
-     background-size: 50%;
-     opacity: 0.05; */
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.mapArea.panelOpen {
+  margin-left: 400px;
 }
 
 /* A subtle gradient overlay on the map area to give it a premium feel */
@@ -23,8 +26,8 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 150px;
-  background: linear-gradient(to bottom, rgba(15, 15, 19, 1), transparent);
+  height: 180px;
+  background: linear-gradient(to bottom, rgba(10, 10, 12, 1) 0%, rgba(10, 10, 12, 0.8) 20%, transparent 100%);
   pointer-events: none;
   z-index: 10;
 }
@@ -35,8 +38,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 150px;
-  background: linear-gradient(to top, rgba(15, 15, 19, 1), transparent);
+  height: 180px;
+  background: linear-gradient(to top, rgba(10, 10, 12, 1) 0%, rgba(10, 10, 12, 0.8) 20%, transparent 100%);
   pointer-events: none;
   z-index: 10;
 }

@@ -1,34 +1,43 @@
 .searchContainer {
   position: absolute;
-  top: 2rem;
+  top: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 500px;
-  z-index: 100;
+  max-width: 540px;
+  z-index: 1000;
   padding: 0 1rem;
 }
 
 .searchWrapper {
   display: flex;
   align-items: center;
-  background: rgba(20, 20, 25, 0.7);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 0.5rem 1rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  background: rgba(10, 10, 12, 0.7);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 0.6rem 1.25rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 
+              0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.searchWrapper.active {
+  background: rgba(10, 10, 12, 0.9);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 
+              0 0 0 1px rgba(99, 102, 241, 0.2);
 }
 
 .searchWrapper:focus-within {
-  border-color: #a855f7;
-  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.2);
+  border-color: #6366f1;
+  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15),
+              0 0 0 1px rgba(99, 102, 241, 0.3);
 }
 
 .searchIcon {
-  color: #888;
-  margin-right: 0.75rem;
+  color: #71717a;
+  margin-right: 1rem;
   display: flex;
   align-items: center;
 }
@@ -38,29 +47,34 @@
   background: transparent;
   border: none;
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   padding: 0.5rem 0;
   outline: none;
   width: 100%;
+  letter-spacing: -0.01em;
 }
 
 .searchInput::placeholder {
-  color: #666;
+  color: #52525b;
 }
 
 .clearButton {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   border: none;
-  color: #666;
+  color: #71717a;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
 }
 
 .clearButton:hover {
   color: #fff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .dropdown {
@@ -68,46 +82,85 @@
   top: calc(100% + 0.75rem);
   left: 1rem;
   right: 1rem;
-  background: rgba(20, 20, 25, 0.9);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  background: rgba(10, 10, 12, 0.95);
+  backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dropdownHeader {
+  padding: 1rem 1.25rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #52525b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .resultItem {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 1rem 1.25rem;
   cursor: pointer;
-  transition: background 0.2s;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.resultItem:last-child {
-  border-bottom: none;
+  transition: all 0.2s;
+  gap: 1rem;
 }
 
 .resultItem:hover {
-  background: rgba(168, 85, 247, 0.15);
+  background: rgba(99, 102, 241, 0.08);
 }
 
-.pinIcon {
-  color: #a855f7;
-  margin-right: 1rem;
+.resultPin {
+  width: 36px;
+  height: 36px;
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  transition: all 0.2s;
 }
 
-.placeName {
-  color: #ccc;
-  font-size: 0.9rem;
+.resultItem:hover .resultPin {
+  background: #6366f1;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.resultText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.placeTitle {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.placeDetails {
+  color: #71717a;
+  font-size: 0.75rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -115,10 +168,23 @@
 
 .spin {
   animation: spin 1s linear infinite;
-  color: #a855f7;
+  color: #6366f1;
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }

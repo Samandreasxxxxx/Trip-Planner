@@ -1,11 +1,23 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { Compass, Map as MapIcon, Settings, User } from 'lucide-react';
+import { Compass, Map as MapIcon, Settings, User, Menu } from 'lucide-react';
 
-export default function Sidebar() {
+interface SidebarProps {
+  onToggleTripPanel: () => void;
+  isPanelOpen: boolean;
+}
+
+export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
+        <button 
+          className={`${styles.menuButton} ${isPanelOpen ? styles.active : ''}`} 
+          onClick={onToggleTripPanel}
+          title={isPanelOpen ? "Hide Trip Plan" : "Show Trip Plan"}
+        >
+          <Menu size={24} />
+        </button>
         <Compass size={32} className={styles.logoIcon} />
       </div>
       <nav className={styles.nav}>

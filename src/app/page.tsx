@@ -13,6 +13,7 @@ export default function Home() {
   const [stops, setStops] = useState<TripStop[]>([]);
   const [activeTool, setActiveTool] = useState<'select' | 'pin'>('select');
   const [focusLocation, setFocusLocation] = useState<{lng: number, lat: number, id: string} | null>(null);
+  const [showTripPanel, setShowTripPanel] = useState(true);
 
   // Load from local storage
   useEffect(() => {
@@ -112,15 +113,16 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      <Sidebar />
-      {/* Moved TripPanel to the left, before MapArea */}
+      <Sidebar onToggleTripPanel={() => setShowTripPanel(!showTripPanel)} isPanelOpen={showTripPanel} />
       <TripPanel 
+        isOpen={showTripPanel}
+        onClose={() => setShowTripPanel(false)}
         stops={stops} 
         onRemoveStop={removeStop}
         onUpdateStop={updateStop}
         onStopClick={handleStopClick}
       />
-      <div className={styles.mapArea}>
+      <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>
         <SearchBar onSelect={handleSearchSelect} />
         <MapToolbar activeTool={activeTool} onToolChange={setActiveTool} />
         <Map 

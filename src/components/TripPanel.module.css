@@ -1,16 +1,32 @@
 .panel {
   width: 400px;
-  background: rgba(20, 20, 25, 0.7);
+  background: rgba(10, 10, 12, 0.85);
   backdrop-filter: blur(24px);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  z-index: 50;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+  z-index: 90;
+  box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  left: 80px;
+  top: 0;
+  bottom: 0;
+}
+
+.panel.closed {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel.open {
+  transform: translateX(0);
+  opacity: 1;
 }
 
 .header {
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: space-between;
@@ -18,10 +34,28 @@
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #fff;
-  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #888;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
 }
 
 .content {
@@ -30,7 +64,19 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+}
+
+.content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
 /* Empty State */
@@ -41,145 +87,159 @@
   justify-content: center;
   text-align: center;
   height: 100%;
-  color: #888;
-  margin-top: 2rem;
+  color: #71717a;
+  padding: 2rem;
 }
 
-.emptyIcon {
-  color: rgba(255, 255, 255, 0.2);
+.emptyIconWrapper {
+  width: 80px;
+  height: 80px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 1.5rem;
 }
 
+.emptyIcon {
+  color: #6366f1;
+  opacity: 0.8;
+}
+
 .emptyState h3 {
-  color: #ccc;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
+  color: #fff;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .emptyState p {
-  font-size: 0.9rem;
-  line-height: 1.5;
-  max-width: 80%;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.shortcut {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fff;
+  font-family: monospace;
+  font-size: 0.75rem;
 }
 
 /* Distance Indicator */
 .distanceIndicator {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: #ff4b2b;
-  font-size: 0.8rem;
+  margin: 0.5rem 0;
+  margin-left: 24px;
+  position: relative;
+}
+
+.line {
+  position: absolute;
+  left: 0;
+  top: -10px;
+  bottom: -10px;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.3), transparent);
+}
+
+.distanceBadge {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
   font-weight: 600;
-  padding: 0.5rem 0 0.5rem 1rem;
-  margin: -0.5rem 0;
-  border-left: 2px dashed rgba(255, 75, 43, 0.3);
-  margin-left: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
 }
 
 /* Stops List */
 .stopsList {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
 .stopCard {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 16px;
+  padding: 1.25rem;
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  transition: transform 0.2s, background 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 .stopCard:hover {
   background: rgba(255, 255, 255, 0.05);
-  transform: translateX(4px);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateX(8px);
 }
 
 .stopNumber {
-  background: #2a1515;
-  color: #ff4b2b;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.75rem;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .stopInfo {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .inlineInputTitle {
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   width: 100%;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 0;
   outline: none;
-  transition: all 0.2s;
   font-family: inherit;
-  margin-left: -8px;
-}
-
-.inlineInputTitle:hover, .inlineInputTitle:focus {
-  background: rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.inlineInputTitle:focus {
-  border-color: #ff4b2b;
 }
 
 .inlineInputDesc {
   background: transparent;
-  border: 1px solid transparent;
-  color: #aaa;
-  font-size: 0.85rem;
+  border: none;
+  color: #71717a;
+  font-size: 0.8rem;
   line-height: 1.4;
   width: 100%;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 0;
   outline: none;
-  resize: vertical;
-  min-height: 40px;
-  transition: all 0.2s;
+  resize: none;
   font-family: inherit;
-  margin-left: -8px;
-}
-
-.inlineInputDesc:hover, .inlineInputDesc:focus {
-  background: rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #ccc;
-}
-
-.inlineInputDesc:focus {
-  border-color: #ff4b2b;
 }
 
 .deleteButton {
   background: transparent;
   border: none;
-  color: #555;
+  color: #3f3f46;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
+  padding: 6px;
+  border-radius: 8px;
   transition: all 0.2s;
-  margin-top: 4px;
 }
 
 .deleteButton:hover {
@@ -188,26 +248,27 @@
 }
 
 .footer {
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.01);
 }
 
 .saveButton {
   width: 100%;
-  background: linear-gradient(135deg, #ff4b2b, #ff416c);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;
   border: none;
-  padding: 1rem;
+  padding: 0.875rem;
   border-radius: 12px;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
 }
 
 .saveButton:hover {
-  opacity: 0.9;
   transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(99, 102, 241, 0.3);
+  filter: brightness(1.1);
 }
