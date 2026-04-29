@@ -6,7 +6,8 @@ import {
   MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, 
   Trash, Download, Copy, Loader2, Check, Calendar, Plus,
   Bed, Utensils, Camera, Car, HelpCircle, Clock, DollarSign,
-  FolderOpen, Edit2, X, Wand2, Sparkles, Share2, CloudSun, Thermometer
+  FolderOpen, Edit2, X, Wand2, Sparkles, Share2, CloudSun, Thermometer,
+  PieChart, Calendar as CalendarIcon, Link as LinkIcon, ExternalLink
 } from 'lucide-react';
 import { TripStop, Trip } from '@/types';
 import { calculateDistance } from '@/utils/distance';
@@ -84,6 +85,7 @@ export default function TripPanel({
   const [isSharing, setIsSharing] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [weather, setWeather] = useState<{temp: number, desc: string} | null>(null);
+  const [showBudgetBreakdown, setShowBudgetBreakdown] = useState(false);
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
 
@@ -149,6 +151,21 @@ export default function TripPanel({
 
   const totalBudget = useMemo(() => {
     return stops.reduce((sum, stop) => sum + (stop.cost || 0), 0);
+  }, [stops]);
+
+  const budgetBreakdown = useMemo(() => {
+    const breakdown: { [key: string]: number } = {
+      hotel: 0,
+      restaurant: 0,
+      sightseeing: 0,
+      transport: 0,
+      other: 0
+    };
+    stops.forEach(stop => {
+      const cat = stop.category || 'other';
+      breakdown[cat] += (stop.cost || 0);
+    });
+    return breakdown;
   }, [stops]);
 
   const moveStop = (id: string, direction: 'up' | 'down') => {
@@ -342,6 +359,47 @@ export default function TripPanel({
     }
   };
 
+  const exportToCalendar = () => {
+    if (stops.length === 0) return;
+    
+    let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Trip Planner//EN\n";
+    
+    stops.forEach(stop => {
+      if (!stop.startTime) return;
+      
+      const [hours, minutes] = stop.startTime.split(':');
+      const now = new Date();
+      // For demo purposes, we set dates starting from today
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (stop.dayNumber - 1));
+      date.setHours(parseInt(hours), parseInt(minutes), 0);
+      
+      const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const start = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const end = new Date(date.getTime() + 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      
+      icsContent += "BEGIN:VEVENT\n";
+      icsContent += `UID:${stop.id}\n`;
+      icsContent += `DTSTAMP:${stamp}\n`;
+      icsContent += `DTSTART:${start}\n`;
+      icsContent += `DTEND:${end}\n`;
+      icsContent += `SUMMARY:${stop.title}\n`;
+      if (stop.description) icsContent += `DESCRIPTION:${stop.description}\n`;
+      icsContent += `LOCATION:${stop.lat},${stop.lng}\n`;
+      icsContent += "END:VEVENT\n";
+    });
+    
+    icsContent += "END:VCALENDAR";
+    
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'Trip-Itinerary.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className={`${styles.panel} ${isOpen ? styles.open : styles.closed}`}>
       <div className={styles.header}>
@@ -455,10 +513,34 @@ export default function TripPanel({
               <span className={styles.statValue}>{days.length}</span>
               <span className={styles.statLabel}>Days</span>
             </div>
-            <div className={styles.statItem}>
+            <div className={styles.statItem} onClick={() => setShowBudgetBreakdown(!showBudgetBreakdown)} style={{cursor: 'pointer'}} title="View Breakdown">
               <span className={styles.statValue}>${totalBudget.toLocaleString()}</span>
               <span className={styles.statLabel}>Budget</span>
+              <PieChart size={10} style={{marginTop: '2px', color: '#10b981'}} />
             </div>
+            {showBudgetBreakdown && totalBudget > 0 && (
+              <div className={styles.budgetBreakdownOverlay}>
+                <div className={styles.breakdownHeader}>
+                  <span>Cost Breakdown</span>
+                  <button onClick={() => setShowBudgetBreakdown(false)}><X size={12} /></button>
+                </div>
+                {Object.entries(budgetBreakdown).map(([cat, amount]) => amount > 0 && (
+                  <div key={cat} className={styles.breakdownRow}>
+                    <span className={styles.breakdownCat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                    <div className={styles.breakdownBarWrapper}>
+                      <div 
+                        className={styles.breakdownBar} 
+                        style={{
+                          width: `${(amount / totalBudget) * 100}%`,
+                          backgroundColor: cat === 'hotel' ? '#f59e0b' : cat === 'restaurant' ? '#ef4444' : cat === 'sightseeing' ? '#10b981' : cat === 'transport' ? '#3b82f6' : '#71717a'
+                        }}
+                      />
+                    </div>
+                    <span className={styles.breakdownAmount}>${amount.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             {weather && (
               <>
                 <div className={styles.statDivider}></div>
@@ -565,7 +647,15 @@ export default function TripPanel({
               disabled={isExporting}
             >
               {isExporting ? <Loader2 size={18} className={styles.spin} /> : <Download size={18} />}
-              <span>{isExporting ? 'Generating PDF...' : 'Export as PDF'}</span>
+              <span>PDF</span>
+            </button>
+            <button 
+              className={`${styles.actionButton} ${styles.calendarBtn}`} 
+              onClick={exportToCalendar}
+              title="Sync to Calendar"
+            >
+              <CalendarIcon size={18} />
+              <span>ICS</span>
             </button>
           </div>
         </div>
@@ -838,6 +928,45 @@ function StopInputs({
         rows={1}
         onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
       />
+
+      <div className={styles.linksSection}>
+        <div className={styles.linksHeader}>
+          <LinkIcon size={12} />
+          <span>Links & Docs</span>
+        </div>
+        <div className={styles.linksList}>
+          {stop.links?.map((link, idx) => (
+            <div key={idx} className={styles.linkItem}>
+              <a href={link} target="_blank" rel="noopener noreferrer" className={styles.linkAnchor}>
+                <ExternalLink size={10} />
+                <span>{link.replace(/^https?:\/\//, '').slice(0, 20)}...</span>
+              </a>
+              <button 
+                className={styles.removeLinkBtn}
+                onClick={() => {
+                  const newLinks = [...(stop.links || [])];
+                  newLinks.splice(idx, 1);
+                  onUpdateStop(stop.id, { links: newLinks });
+                }}
+              >
+                <X size={10} />
+              </button>
+            </div>
+          ))}
+          <button 
+            className={styles.addLinkBtn}
+            onClick={() => {
+              const url = prompt('Enter URL (e.g. https://google.com):');
+              if (url) {
+                onUpdateStop(stop.id, { links: [...(stop.links || []), url] });
+              }
+            }}
+          >
+            <Plus size={10} />
+            <span>Add Link</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

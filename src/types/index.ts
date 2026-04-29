@@ -11,6 +11,7 @@ export interface TripStop {
   category?: 'hotel' | 'restaurant' | 'sightseeing' | 'transport' | 'other';
   cost?: number;
   emoji?: string;
+  links?: string[];
 }
 
 export interface Trip {

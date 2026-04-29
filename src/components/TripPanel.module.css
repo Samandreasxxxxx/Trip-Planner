@@ -246,6 +246,73 @@
   letter-spacing: 0.05em;
 }
 
+.budgetBreakdownOverlay {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: -0.5rem;
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.breakdownHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #10b981;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.breakdownHeader button {
+  background: rgba(16, 185, 129, 0.2);
+  border: none;
+  color: #10b981;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.breakdownRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.breakdownCat {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  width: 70px;
+}
+
+.breakdownBarWrapper {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.breakdownBar {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.breakdownAmount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  width: 50px;
+  text-align: right;
+}
+
 .shortcutsHeader button {
   background: rgba(129, 140, 248, 0.2);
   border: none;
@@ -866,6 +933,20 @@
   box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
 }
 
+.calendarBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+  flex: 0 0 auto;
+}
+
+.calendarBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
 .spin {
   animation: spin 1s linear infinite;
 }
@@ -873,4 +954,84 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.linksSection {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.linksHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #52525b;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.linksList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.linkItem {
+  display: flex;
+  align-items: center;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  gap: 6px;
+}
+
+.linkAnchor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #818cf8;
+  font-size: 0.7rem;
+  text-decoration: none;
+}
+
+.linkAnchor:hover {
+  text-decoration: underline;
+}
+
+.removeLinkBtn {
+  background: transparent;
+  border: none;
+  color: #52525b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.removeLinkBtn:hover {
+  color: #ef4444;
+}
+
+.addLinkBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  color: #71717a;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addLinkBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
