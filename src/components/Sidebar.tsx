@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { Compass, Map as MapIcon, Menu } from 'lucide-react';
+import { Compass, Map as MapIcon, Menu, Sun, Moon } from 'lucide-react';
 
 interface SidebarProps {
   onToggleTripPanel: () => void;
@@ -8,6 +8,13 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps) {
+  const [isLight, setIsLight] = React.useState(false);
+
+  const toggleTheme = () => {
+    setIsLight(!isLight);
+    document.body.classList.toggle('light');
+  };
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
@@ -25,6 +32,15 @@ export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps
           <MapIcon size={24} />
         </button>
       </nav>
+      <div className={styles.bottom}>
+        <button 
+          className={styles.themeButton} 
+          onClick={toggleTheme}
+          title={isLight ? "Switch to Dark Mode" : "Switch to Light Mode"}
+        >
+          {isLight ? <Moon size={20} /> : <Sun size={20} />}
+        </button>
+      </div>
     </aside>
   );
 }

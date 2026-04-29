@@ -6,7 +6,7 @@ import {
   MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, 
   Trash, Download, Copy, Loader2, Check, Calendar, Plus,
   Bed, Utensils, Camera, Car, HelpCircle, Clock, DollarSign,
-  FolderOpen, Edit2, X, Wand2, Sparkles, Share2
+  FolderOpen, Edit2, X, Wand2, Sparkles, Share2, CloudSun, Thermometer
 } from 'lucide-react';
 import { TripStop, Trip } from '@/types';
 import { calculateDistance } from '@/utils/distance';
@@ -83,12 +83,36 @@ export default function TripPanel({
   const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
+  const [weather, setWeather] = useState<{temp: number, desc: string} | null>(null);
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
 
   React.useEffect(() => {
     if (activeTrip) setEditingName(activeTrip.name);
   }, [activeTrip]);
+
+  // Fetch weather for the first stop
+  React.useEffect(() => {
+    if (stops.length > 0) {
+      const firstStop = stops[0];
+      const fetchWeather = async () => {
+        try {
+          const res = await fetch(`https://wttr.in/${firstStop.lat},${firstStop.lng}?format=j1`);
+          const data = await res.json();
+          const current = data.current_condition[0];
+          setWeather({
+            temp: parseInt(current.temp_C),
+            desc: current.weatherDesc[0].value
+          });
+        } catch (e) {
+          console.error('Failed to fetch weather');
+        }
+      };
+      fetchWeather();
+    } else {
+      setWeather(null);
+    }
+  }, [stops]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -435,6 +459,17 @@ export default function TripPanel({
               <span className={styles.statValue}>${totalBudget.toLocaleString()}</span>
               <span className={styles.statLabel}>Budget</span>
             </div>
+            {weather && (
+              <>
+                <div className={styles.statDivider}></div>
+                <div className={styles.statItem} title={weather.desc}>
+                  <span className={styles.statValue}>
+                    {unit === 'km' ? `${weather.temp}°C` : `${Math.round(weather.temp * 9/5 + 32)}°F`}
+                  </span>
+                  <span className={styles.statLabel}>Weather</span>
+                </div>
+              </>
+            )}
             <div className={styles.statDivider}></div>
             <button className={styles.clearAllButton} onClick={onClearAll} title="Clear All">
               <Trash size={16} />
@@ -602,6 +637,7 @@ function SortableStop({
         <div className={styles.categoryBadge}>
           <CategoryIcon category={stop.category} />
         </div>
+        {stop.emoji && <div className={styles.emojiBadge}>{stop.emoji}</div>}
       </div>
       
       <div className={styles.stopCardLeft} {...attributes} {...listeners} style={{cursor: 'grab'}}>
@@ -739,21 +775,60 @@ function StopInputs({
 }) {
   const [title, setTitle] = useState(stop.title);
   const [desc, setDesc] = useState(stop.description || '');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const emojis = ['📍', '✈️', '🏨', '🍽️', '🏛️', '🎭', '🌳', '🏖️', '⛰️', '🚗', '🚶', '🚲', '📸', '☕', '🍷', '🍦'];
 
   React.useEffect(() => { setTitle(stop.title); }, [stop.title]);
   React.useEffect(() => { setDesc(stop.description || ''); }, [stop.description]);
 
   return (
     <div className={styles.stopInfo} onClick={(e) => e.stopPropagation()}>
-      <input 
-        type="text"
-        className={styles.inlineInputTitle}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onBlur={() => onUpdateStop(stop.id, { title })}
-        placeholder="Stop Name"
-        onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
-      />
+      <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+        <button 
+          className={styles.emojiPickerBtn} 
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          title="Pick emoji"
+        >
+          {stop.emoji || '😀'}
+        </button>
+        <input 
+          type="text"
+          className={styles.inlineInputTitle}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={() => onUpdateStop(stop.id, { title })}
+          placeholder="Stop Name"
+          onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
+        />
+      </div>
+
+      {showEmojiPicker && (
+        <div className={styles.emojiGrid}>
+          {emojis.map(e => (
+            <button 
+              key={e} 
+              className={styles.emojiOption}
+              onClick={() => {
+                onUpdateStop(stop.id, { emoji: e });
+                setShowEmojiPicker(false);
+              }}
+            >
+              {e}
+            </button>
+          ))}
+          <button 
+            className={styles.emojiOption}
+            onClick={() => {
+              onUpdateStop(stop.id, { emoji: '' });
+              setShowEmojiPicker(false);
+            }}
+            title="Clear emoji"
+          >
+            <X size={10} />
+          </button>
+        </div>
+      )}
       <textarea 
         className={styles.inlineInputDesc}
         value={desc}

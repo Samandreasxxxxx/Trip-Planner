@@ -10,6 +10,7 @@ export interface TripStop {
   startTime?: string;
   category?: 'hotel' | 'restaurant' | 'sightseeing' | 'transport' | 'other';
   cost?: number;
+  emoji?: string;
 }
 
 export interface Trip {

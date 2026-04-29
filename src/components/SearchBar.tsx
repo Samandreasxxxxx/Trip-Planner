@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, X, Loader2, Globe } from 'lucide-react';
+import { Search, MapPin, X, Loader2, Globe, History, Trash2 } from 'lucide-react';
 import styles from './SearchBar.module.css';
 
 interface SearchResult {
@@ -21,6 +21,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [history, setHistory] = useState<SearchResult[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
@@ -32,6 +33,18 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Load history from localStorage
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('trip-search-history');
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error('Failed to parse search history');
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -66,9 +79,21 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
 
   const handleSelect = (result: SearchResult) => {
     onSelect(result.center[0], result.center[1], result.place_name);
+    
+    // Update history
+    const newHistory = [result, ...history.filter(h => h.id !== result.id)].slice(0, 5);
+    setHistory(newHistory);
+    localStorage.setItem('trip-search-history', JSON.stringify(newHistory));
+
     setQuery('');
     setResults([]);
     setShowDropdown(false);
+  };
+
+  const clearHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHistory([]);
+    localStorage.removeItem('trip-search-history');
   };
 
   return (
@@ -83,7 +108,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
           placeholder="Search for any city, street or hidden gem..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => query.length >= 2 && setShowDropdown(true)}
+          onFocus={() => setShowDropdown(true)}
         />
         {query && (
           <button className={styles.clearButton} onClick={() => setQuery('')}>
@@ -92,29 +117,62 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
         )}
       </div>
 
-      {showDropdown && results.length > 0 && (
+      {showDropdown && (results.length > 0 || (query === '' && history.length > 0)) && (
         <div className={styles.dropdown} ref={dropdownRef}>
-          <div className={styles.dropdownHeader}>
-            <Globe size={12} />
-            <span>Locations Found</span>
-          </div>
-          {results.map((result) => (
-            <div
-              key={result.id}
-              className={styles.resultItem}
-              onClick={() => handleSelect(result)}
-            >
-              <div className={styles.resultPin}>
-                <MapPin size={14} />
+          {query === '' && history.length > 0 ? (
+            <>
+              <div className={styles.dropdownHeader}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                  <History size={12} />
+                  <span>Recent Searches</span>
+                </div>
+                <button className={styles.clearHistoryBtn} onClick={clearHistory}>
+                  <Trash2 size={12} />
+                </button>
               </div>
-              <div className={styles.resultText}>
-                <span className={styles.placeTitle}>{result.text}</span>
-                <span className={styles.placeDetails}>
-                  {result.context?.map(c => c.text).join(', ') || result.place_name}
-                </span>
+              {history.map((result) => (
+                <div
+                  key={`hist-${result.id}`}
+                  className={styles.resultItem}
+                  onClick={() => handleSelect(result)}
+                >
+                  <div className={styles.resultPin} style={{background: 'rgba(255,255,255,0.05)'}}>
+                    <History size={14} />
+                  </div>
+                  <div className={styles.resultText}>
+                    <span className={styles.placeTitle}>{result.text}</span>
+                    <span className={styles.placeDetails}>
+                      {result.context?.map(c => c.text).join(', ') || result.place_name}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : results.length > 0 ? (
+            <>
+              <div className={styles.dropdownHeader}>
+                <Globe size={12} />
+                <span>Locations Found</span>
               </div>
-            </div>
-          ))}
+              {results.map((result) => (
+                <div
+                  key={result.id}
+                  className={styles.resultItem}
+                  onClick={() => handleSelect(result)}
+                >
+                  <div className={styles.resultPin}>
+                    <MapPin size={14} />
+                  </div>
+                  <div className={styles.resultText}>
+                    <span className={styles.placeTitle}>{result.text}</span>
+                    <span className={styles.placeDetails}>
+                      {result.context?.map(c => c.text).join(', ') || result.place_name}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : null}
         </div>
       )}
     </div>

@@ -10,6 +10,14 @@
   --glass-border: rgba(255, 255, 255, 0.08);
 }
 
+body.light {
+  --bg-dark: #f4f4f5;
+  --text-main: #09090b;
+  --text-muted: #52525b;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.08);
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
