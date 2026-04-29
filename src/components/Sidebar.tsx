@@ -28,10 +28,15 @@ export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps
         <Compass size={32} className={styles.logoIcon} />
       </div>
       <nav className={styles.nav}>
-        <button className={`${styles.navItem} ${styles.active}`} title="Trip Planner">
+        <button className={`${styles.navItem} ${styles.active}`} title="Adventure Planner">
           <MapIcon size={24} />
         </button>
       </nav>
+      
+      <div className={styles.quoteSection}>
+        <p>"To travel is to live."</p>
+        <small>– Hans Christian Andersen</small>
+      </div>
       <div className={styles.bottom}>
         <button 
           className={styles.themeButton} 

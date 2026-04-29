@@ -491,24 +491,25 @@ export default function TripPanel({
         )}
 
         <div className={styles.headerTop}>
-          <h2 className={styles.title}>Your Trip Plan</h2>
+          <h2 className={styles.title}>Your Adventure</h2>
           <div className={styles.headerActions}>
             <button 
               className={styles.headerActionBtn} 
               onClick={() => setShowShortcuts(!showShortcuts)}
-              title="Keyboard Shortcuts"
+              title="Helpful Shortcuts"
             >
               <HelpCircle size={18} />
             </button>
             <button 
               className={styles.headerActionBtn} 
-              title="Expense Splitter" 
+              title="Split Costs with Friends" 
               onClick={() => setShowExpenseSplitter(!showExpenseSplitter)}
             >
               <Receipt size={16} />
             </button>
             <button 
               className={styles.headerActionBtn} 
+              title="Inspire My Next Adventure" 
               onClick={() => setShowAIPlanner(true)}
             >
               <Wand2 size={16} />
@@ -725,7 +726,7 @@ export default function TripPanel({
               disabled={isExporting}
             >
               {isExporting ? <Loader2 size={18} className={styles.spin} /> : <Download size={18} />}
-              <span>PDF</span>
+              <span>Save as PDF</span>
             </button>
             <button 
               className={`${styles.actionButton} ${styles.calendarBtn}`} 

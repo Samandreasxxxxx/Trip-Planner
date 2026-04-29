@@ -63,7 +63,7 @@ export default function AIPlannerModal({ isOpen, onClose, onGenerate }: AIPlanne
         <div className={styles.header}>
           <div className={styles.titleWrapper}>
             <Sparkles className={styles.icon} size={20} />
-            <h2>AI Itinerary Planner</h2>
+            <h2>Inspire My Next Adventure</h2>
           </div>
           <button className={styles.closeBtn} onClick={onClose}>
             <X size={20} />
@@ -71,15 +71,15 @@ export default function AIPlannerModal({ isOpen, onClose, onGenerate }: AIPlanne
         </div>
         <div className={styles.body}>
           <p className={styles.description}>
-            Describe your dream trip. Our AI will generate a tailored itinerary with top locations.
+            Where do you want to go? Tell us what you love (food, art, nature), and we'll help you find the best spots!
             <br/>
-            <small>(Try "3 days in Paris for a foodie" or "Tokyo highlights")</small>
+            <small>Try: "Show me the best street food in Tokyo" or "A romantic weekend in Paris"</small>
           </p>
           <textarea
             className={styles.textarea}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="E.g., I want to spend 3 days in Paris focusing on art and food..."
+            placeholder="I'm dreaming of..."
             rows={4}
           />
           <button 
@@ -88,7 +88,7 @@ export default function AIPlannerModal({ isOpen, onClose, onGenerate }: AIPlanne
             disabled={!prompt.trim() || isGenerating}
           >
             {isGenerating ? <Loader2 className={styles.spin} size={18} /> : <Sparkles size={18} />}
-            <span>{isGenerating ? 'Generating Itinerary...' : 'Generate Magic Itinerary'}</span>
+            <span>{isGenerating ? 'Building Your Adventure...' : 'Magic Planner'}</span>
           </button>
         </div>
       </div>

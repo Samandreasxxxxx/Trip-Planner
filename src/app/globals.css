@@ -1,27 +1,27 @@
 :root {
-  --bg-dark: #050505;
-  --text-main: #ffffff;
-  --text-muted: #a1a1aa;
-  --accent-primary: #6366f1;
-  --accent-secondary: #a855f7;
-  --accent-glow: rgba(99, 102, 241, 0.5);
-  --glass-bg: rgba(10, 10, 12, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --card-hover: rgba(255, 255, 255, 0.06);
-  --radius-lg: 24px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
+  --bg-dark: #0f172a; /* Deep Navy Adventure */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-primary: #f97316; /* Vibrant Tangerine */
+  --accent-secondary: #06b6d4; /* Tropical Teal */
+  --accent-glow: rgba(249, 115, 22, 0.4);
+  --glass-bg: rgba(15, 23, 42, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --card-bg: rgba(30, 41, 59, 0.4);
+  --card-hover: rgba(30, 41, 59, 0.6);
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --radius-sm: 14px;
 }
 
 body.light {
-  --bg-dark: #f8fafc;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.05);
-  --card-bg: rgba(0, 0, 0, 0.02);
-  --card-hover: rgba(0, 0, 0, 0.04);
+  --bg-dark: #fff7ed; /* Warm Sunset Sand */
+  --text-main: #431407; /* Earthy Brown */
+  --text-muted: #9a3412;
+  --glass-bg: rgba(255, 251, 235, 0.85);
+  --glass-border: rgba(124, 45, 18, 0.1);
+  --card-bg: rgba(254, 215, 170, 0.2);
+  --card-hover: rgba(254, 215, 170, 0.4);
 }
 
 * {
