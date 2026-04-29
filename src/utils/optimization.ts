@@ -36,15 +36,12 @@ export async function optimizeRoute(stops: TripStop[]): Promise<TripStop[]> {
 
     // data.waypoints contains the waypoints in the optimized order
     // waypoint_index refers to the index in the original coordinates string
-    const optimizedStops = data.waypoints
-      .sort((a: any, b: any) => a.waypoint_index - b.waypoint_index) // This is wrong, waypoint_index is the original index
-      // Wait, the API returns waypoints in the order they were provided, but with a 'trips_index' or we should use 'trips'
-      // Actually, the 'trips' array contains 'geometry' and 'legs'.
-      // The 'waypoints' array has 'waypoint_index' which is the index of the coordinate in the request.
-      // And they are ordered by their sequence in the trip.
+    interface Waypoint {
+      waypoint_index: number;
+      trips_index: number;
+    }
     
-    // Correction: The waypoints array in the response is ordered by their sequence in the trip.
-    const sequence = data.waypoints.map((wp: any) => wp.waypoint_index);
+    const sequence = data.waypoints.map((wp: Waypoint) => wp.waypoint_index);
     
     return sequence.map((index: number) => stops[index]);
   } catch (error) {

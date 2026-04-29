@@ -34,7 +34,7 @@ export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps
       </nav>
       
       <div className={styles.quoteSection}>
-        <p>"To travel is to live."</p>
+        <p>&quot;To travel is to live.&quot;</p>
         <small>– Hans Christian Andersen</small>
       </div>
       <div className={styles.bottom}>

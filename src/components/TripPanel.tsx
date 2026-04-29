@@ -3,11 +3,11 @@
 import React, { useMemo, useState } from 'react';
 import styles from './TripPanel.module.css';
 import { 
-  MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, 
-  Trash, Download, Copy, Loader2, Check, Calendar, Plus,
-  Bed, Utensils, Camera, Car, HelpCircle, Clock, DollarSign,
-  FolderOpen, Edit2, X, Wand2, Sparkles, Share2, CloudSun, Thermometer,
-  PieChart, Calendar as CalendarIcon, Link as LinkIcon, ExternalLink,
+  MapPin, Trash2, ChevronLeft, ChevronUp, ChevronDown, 
+  Trash, Download, Copy, Loader2, Check, Plus,
+  Bed, Utensils, Camera, Car, HelpCircle, DollarSign,
+  FolderOpen, Edit2, X, Wand2, Sparkles, Share2,
+  PieChart, Link as LinkIcon, ExternalLink,
   Users, Receipt
 } from 'lucide-react';
 import { TripStop, Trip } from '@/types';
@@ -94,7 +94,9 @@ export default function TripPanel({
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
 
   React.useEffect(() => {
-    if (activeTrip) setEditingName(activeTrip.name);
+    if (activeTrip && activeTrip.name !== editingName) {
+      setEditingName(activeTrip.name);
+    }
   }, [activeTrip]);
 
   // Fetch weather for the first stop
@@ -188,6 +190,10 @@ export default function TripPanel({
       breakdown[cat] += (stop.cost || 0);
     });
     return breakdown;
+  }, [stops]);
+
+  const totalBudget = useMemo(() => {
+    return stops.reduce((sum, stop) => sum + (stop.cost || 0), 0);
   }, [stops]);
 
   const moveStop = (id: string, direction: 'up' | 'down') => {
@@ -598,6 +604,7 @@ export default function TripPanel({
                 </div>
               </div>
             )}
+            {showBudgetBreakdown && (
               <div className={styles.budgetBreakdownOverlay}>
                 <div className={styles.breakdownHeader}>
                   <span>Cost Breakdown</span>
@@ -610,7 +617,7 @@ export default function TripPanel({
                       <div 
                         className={styles.breakdownBar} 
                         style={{
-                          width: `${(amount / totalBudget) * 100}%`,
+                          width: `${(amount / (totalBudget || 1)) * 100}%`,
                           backgroundColor: cat === 'hotel' ? '#f59e0b' : cat === 'restaurant' ? '#ef4444' : cat === 'sightseeing' ? '#10b981' : cat === 'transport' ? '#3b82f6' : '#71717a'
                         }}
                       />
@@ -974,8 +981,14 @@ function StopInputs({
 
   const emojis = ['📍', '✈️', '🏨', '🍽️', '🏛️', '🎭', '🌳', '🏖️', '⛰️', '🚗', '🚶', '🚲', '📸', '☕', '🍷', '🍦'];
 
-  React.useEffect(() => { setTitle(stop.title); }, [stop.title]);
-  React.useEffect(() => { setDesc(stop.description || ''); }, [stop.description]);
+  React.useEffect(() => { 
+    if (stop.title !== title) setTitle(stop.title); 
+  }, [stop.title]);
+  
+  React.useEffect(() => { 
+    const currentDesc = stop.description || '';
+    if (currentDesc !== desc) setDesc(currentDesc); 
+  }, [stop.description]);
 
   return (
     <div className={styles.stopInfo} onClick={(e) => e.stopPropagation()}>

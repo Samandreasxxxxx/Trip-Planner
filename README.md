@@ -16,9 +16,20 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Manual Setup Required
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To fully use this application, you need to perform the following steps:
+
+1.  **API Tokens**:
+    *   Create a `.env.local` file by copying `.env.example`.
+    *   **Mapbox**: Get an access token from [Mapbox](https://mapbox.com/) and set `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`.
+    *   **Supabase**: Get your project URL and Anon Key from [Supabase](https://supabase.com/) and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+2.  **Database Configuration**:
+    *   Follow the instructions in [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) to create the required tables for the sharing feature.
+
+3.  **Images**:
+    *   The app uses Mapbox Static Images for stop thumbnails. These will automatically work once you provide a valid Mapbox token.
 
 ## Learn More
 

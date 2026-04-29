@@ -314,4 +314,5 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
   );
 });
 
+Map.displayName = 'Map';
 export default Map;
