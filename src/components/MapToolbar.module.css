@@ -51,16 +51,15 @@
 }
 
 .toolLabel {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0.8;
 }
 
 .divider {
   width: 80%;
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   margin: 0.25rem auto;
 }

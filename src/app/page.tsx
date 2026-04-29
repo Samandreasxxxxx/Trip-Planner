@@ -14,6 +14,7 @@ export default function Home() {
   const [activeTool, setActiveTool] = useState<'select' | 'pin'>('select');
   const [focusLocation, setFocusLocation] = useState<{lng: number, lat: number, id: string} | null>(null);
   const [showTripPanel, setShowTripPanel] = useState(true);
+  const [unit, setUnit] = useState<'km' | 'mi'>('km');
   
   const mapRef = useRef<MapRef>(null);
 
@@ -132,11 +133,18 @@ export default function Home() {
         onStopClick={handleStopClick}
         onReorderStops={setStops}
         onClearAll={clearAllStops}
+        unit={unit}
+        onUnitToggle={() => setUnit(prev => prev === 'km' ? 'mi' : 'km')}
         getMapScreenshot={() => mapRef.current ? mapRef.current.getScreenshot() : Promise.resolve('')}
       />
       <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>
         <SearchBar onSelect={handleSearchSelect} />
-        <MapToolbar activeTool={activeTool} onToolChange={setActiveTool} />
+        <MapToolbar 
+          activeTool={activeTool} 
+          onToolChange={setActiveTool} 
+          onFly={() => mapRef.current?.startFlyover()}
+          hasStops={stops.length > 0}
+        />
         <Map 
           ref={mapRef}
           stops={stops} 

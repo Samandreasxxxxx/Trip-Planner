@@ -11,6 +11,23 @@ import { TripStop } from '@/types';
 import { calculateDistance } from '@/utils/distance';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { 
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TripPanelProps {
   isOpen: boolean;
@@ -21,6 +38,8 @@ interface TripPanelProps {
   onStopClick: (lng: number, lat: number, id: string) => void;
   onReorderStops: (stops: TripStop[]) => void;
   onClearAll: () => void;
+  unit: 'km' | 'mi';
+  onUnitToggle: () => void;
   getMapScreenshot: () => Promise<string>;
 }
 
@@ -33,11 +52,25 @@ export default function TripPanel({
   onStopClick,
   onReorderStops,
   onClearAll,
+  unit,
+  onUnitToggle,
   getMapScreenshot
 }: TripPanelProps) {
 
   const [isExporting, setIsExporting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Group stops by day
   const groupedStops = useMemo(() => {
@@ -58,8 +91,8 @@ export default function TripPanel({
     for (let i = 1; i < stops.length; i++) {
       total += calculateDistance(stops[i-1].lat, stops[i-1].lng, stops[i].lat, stops[i].lng);
     }
-    return total;
-  }, [stops]);
+    return unit === 'km' ? total : total * 0.621371;
+  }, [stops, unit]);
 
   const moveStop = (id: string, direction: 'up' | 'down') => {
     const index = stops.findIndex(s => s.id === id);
@@ -69,6 +102,30 @@ export default function TripPanel({
     
     [newStops[index], newStops[targetIndex]] = [newStops[targetIndex], newStops[index]];
     onReorderStops(newStops);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const activeStop = stops.find(s => s.id === active.id);
+      const overStop = stops.find(s => s.id === over.id);
+      
+      if (activeStop && overStop) {
+        const oldIndex = stops.findIndex(s => s.id === active.id);
+        const newIndex = stops.findIndex(s => s.id === over.id);
+        
+        let newStops = arrayMove(stops, oldIndex, newIndex);
+        
+        // If moving between different days, update the dayNumber
+        if (activeStop.dayNumber !== overStop.dayNumber) {
+          newStops = newStops.map(s => 
+            s.id === active.id ? { ...s, dayNumber: overStop.dayNumber } : s
+          );
+        }
+        
+        onReorderStops(newStops);
+      }
+    }
   };
 
   const changeDay = (id: string, newDay: number) => {
@@ -223,15 +280,43 @@ export default function TripPanel({
       <div className={styles.header}>
         <div className={styles.headerTop}>
           <h2 className={styles.title}>Your Trip Plan</h2>
-          <button className={styles.closeButton} onClick={onClose}>
-            <ChevronLeft size={20} />
-          </button>
+          <div className={styles.headerActions}>
+            <button 
+              className={styles.headerActionBtn} 
+              onClick={() => setShowShortcuts(!showShortcuts)}
+              title="Keyboard Shortcuts"
+            >
+              <HelpCircle size={18} />
+            </button>
+            <button className={styles.closeButton} onClick={onClose}>
+              <ChevronLeft size={20} />
+            </button>
+          </div>
         </div>
+        {showShortcuts && (
+          <div className={styles.shortcutsOverlay}>
+            <div className={styles.shortcutsHeader}>
+              <span>Keyboard Shortcuts</span>
+              <button onClick={() => setShowShortcuts(false)}><Check size={14} /></button>
+            </div>
+            <div className={styles.shortcutRow}>
+              <kbd>Alt</kbd> + <kbd>H</kbd> <span>Select Tool</span>
+            </div>
+            <div className={styles.shortcutRow}>
+              <kbd>Alt</kbd> + <kbd>A</kbd> <span>Add Pin Tool</span>
+            </div>
+          </div>
+        )}
         {stops.length > 0 && (
           <div className={styles.headerStats}>
             <div className={styles.statItem}>
               <span className={styles.statValue}>{stops.length}</span>
               <span className={styles.statLabel}>Stops</span>
+            </div>
+            <div className={styles.statDivider}></div>
+            <div className={styles.statItem} onClick={onUnitToggle} style={{cursor: 'pointer'}} title="Toggle Unit">
+              <span className={styles.statValue}>{totalDistance.toFixed(totalDistance > 100 ? 0 : 1)}</span>
+              <span className={styles.statLabel}>{unit}</span>
             </div>
             <div className={styles.statDivider}></div>
             <div className={styles.statItem}>
@@ -256,136 +341,40 @@ export default function TripPanel({
           </div>
         )}
 
-        <div className={styles.stopsList}>
-          {days.map(dayNum => (
-            <div key={dayNum} className={styles.daySection}>
-              <div className={styles.dayHeader}>
-                <div className={styles.dayTitle}>Day {dayNum}</div>
-                {dayNum === days[days.length - 1] && (
-                  <button 
-                    className={styles.addDayBtn}
-                    onClick={() => {
-                      // Adding a dummy stop to create a new day if empty, or just implied by future additions
-                      // Actually better to just show "Day X" if stops exist in it.
-                    }}
-                  >
-                    <Calendar size={12} style={{marginRight: '4px'}} />
-                    Plan Next Day
-                  </button>
-                )}
+        <DndContext 
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div className={styles.stopsList}>
+            {days.map(dayNum => (
+              <div key={dayNum} className={styles.daySection}>
+                <div className={styles.dayHeader}>
+                  <div className={styles.dayTitle}>Day {dayNum}</div>
+                </div>
+                
+                <SortableContext 
+                  items={groupedStops[dayNum].map(s => s.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {groupedStops[dayNum].map((stop) => (
+                    <SortableStop 
+                      key={stop.id}
+                      stop={stop}
+                      stops={stops}
+                      onStopClick={onStopClick}
+                      onUpdateStop={onUpdateStop}
+                      onRemoveStop={onRemoveStop}
+                      moveStop={moveStop}
+                      changeDay={changeDay}
+                    />
+                  ))}
+                </SortableContext>
               </div>
-              
-              {groupedStops[dayNum].map((stop, index) => {
-                const globalIndex = stops.findIndex(s => s.id === stop.id);
-                return (
-                  <div 
-                    key={stop.id}
-                    className={styles.stopCard} 
-                    onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
-                  >
-                    <div className={styles.stopCardLeft}>
-                      <CategoryIcon category={stop.category} />
-                      <div className={styles.reorderButtons}>
-                        <button 
-                          disabled={globalIndex === 0} 
-                          onClick={(e) => { e.stopPropagation(); moveStop(stop.id, 'up'); }}
-                          className={styles.reorderBtn}
-                        >
-                          <ChevronUp size={14} />
-                        </button>
-                        <button 
-                          disabled={globalIndex === stops.length - 1} 
-                          onClick={(e) => { e.stopPropagation(); moveStop(stop.id, 'down'); }}
-                          className={styles.reorderBtn}
-                        >
-                          <ChevronDown size={14} />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className={styles.stopInfo}>
-                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <input 
-                          type="time" 
-                          className={styles.timeInput}
-                          value={stop.startTime || ''}
-                          onChange={(e) => onUpdateStop(stop.id, { startTime: e.target.value })}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div style={{display: 'flex', gap: '4px'}}>
-                           <button 
-                            className={styles.reorderBtn}
-                            onClick={(e) => { e.stopPropagation(); changeDay(stop.id, stop.dayNumber - 1); }}
-                            title="Move to Previous Day"
-                            disabled={stop.dayNumber === 1}
-                           >
-                            <ChevronLeft size={14} />
-                           </button>
-                           <button 
-                            className={styles.reorderBtn}
-                            onClick={(e) => { e.stopPropagation(); changeDay(stop.id, stop.dayNumber + 1); }}
-                            title="Move to Next Day"
-                           >
-                            <ChevronUp size={14} style={{transform: 'rotate(90deg)'}} />
-                           </button>
-                        </div>
-                      </div>
-                      
-                      <StopInputs 
-                        stop={stop} 
-                        onUpdateStop={onUpdateStop} 
-                        onStopClick={onStopClick} 
-                      />
-                      
-                      <div className={styles.categoryGrid}>
-                        <CategoryButton 
-                          active={stop.category === 'hotel'} 
-                          onClick={() => onUpdateStop(stop.id, { category: 'hotel' })}
-                          icon={<Bed size={12} />}
-                          title="Hotel"
-                        />
-                        <CategoryButton 
-                          active={stop.category === 'restaurant'} 
-                          onClick={() => onUpdateStop(stop.id, { category: 'restaurant' })}
-                          icon={<Utensils size={12} />}
-                          title="Food"
-                        />
-                        <CategoryButton 
-                          active={stop.category === 'sightseeing'} 
-                          onClick={() => onUpdateStop(stop.id, { category: 'sightseeing' })}
-                          icon={<Camera size={12} />}
-                          title="Sight"
-                        />
-                        <CategoryButton 
-                          active={stop.category === 'transport'} 
-                          onClick={() => onUpdateStop(stop.id, { category: 'transport' })}
-                          icon={<Car size={12} />}
-                          title="Travel"
-                        />
-                        <CategoryButton 
-                          active={stop.category === 'other' || !stop.category} 
-                          onClick={() => onUpdateStop(stop.id, { category: 'other' })}
-                          icon={<HelpCircle size={12} />}
-                          title="Other"
-                        />
-                      </div>
-                    </div>
-
-                    <button 
-                      className={styles.deleteButton}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveStop(stop.id);
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </DndContext>
+      </div>
       </div>
 
       {stops.length > 0 && (
@@ -421,6 +410,151 @@ function CategoryIcon({ category }: { category?: string }) {
     case 'transport': return <div className={styles.stopNumber} style={{background: '#3b82f6'}}><Car size={12} /></div>;
     default: return <div className={styles.stopNumber}><MapPin size={12} /></div>;
   }
+}
+
+interface SortableStopProps {
+  stop: TripStop;
+  stops: TripStop[];
+  onStopClick: (lng: number, lat: number, id: string) => void;
+  onUpdateStop: (id: string, updates: Partial<TripStop>) => void;
+  onRemoveStop: (id: string) => void;
+  moveStop: (id: string, direction: 'up' | 'down') => void;
+  changeDay: (id: string, newDay: number) => void;
+}
+
+function SortableStop({ 
+  stop, 
+  stops, 
+  onStopClick, 
+  onUpdateStop, 
+  onRemoveStop, 
+  moveStop, 
+  changeDay 
+}: SortableStopProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: stop.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const globalIndex = stops.findIndex(s => s.id === stop.id);
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={styles.stopCard} 
+      onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
+    >
+      <div className={styles.stopCardLeft} {...attributes} {...listeners} style={{cursor: 'grab'}}>
+        <CategoryIcon category={stop.category} />
+        <div className={styles.reorderButtons}>
+          <button 
+            disabled={globalIndex === 0} 
+            onClick={(e) => { e.stopPropagation(); moveStop(stop.id, 'up'); }}
+            className={styles.reorderBtn}
+          >
+            <ChevronUp size={14} />
+          </button>
+          <button 
+            disabled={globalIndex === stops.length - 1} 
+            onClick={(e) => { e.stopPropagation(); moveStop(stop.id, 'down'); }}
+            className={styles.reorderBtn}
+          >
+            <ChevronDown size={14} />
+          </button>
+        </div>
+      </div>
+      
+      <div className={styles.stopInfo}>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          <input 
+            type="time" 
+            className={styles.timeInput}
+            value={stop.startTime || ''}
+            onChange={(e) => onUpdateStop(stop.id, { startTime: e.target.value })}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div style={{display: 'flex', gap: '4px'}}>
+             <button 
+              className={styles.reorderBtn}
+              onClick={(e) => { e.stopPropagation(); changeDay(stop.id, stop.dayNumber - 1); }}
+              title="Move to Previous Day"
+              disabled={stop.dayNumber === 1}
+             >
+              <ChevronLeft size={14} />
+             </button>
+             <button 
+              className={styles.reorderBtn}
+              onClick={(e) => { e.stopPropagation(); changeDay(stop.id, stop.dayNumber + 1); }}
+              title="Move to Next Day"
+             >
+              <ChevronUp size={14} style={{transform: 'rotate(90deg)'}} />
+             </button>
+          </div>
+        </div>
+        
+        <StopInputs 
+          stop={stop} 
+          onUpdateStop={onUpdateStop} 
+          onStopClick={onStopClick} 
+        />
+        
+        <div className={styles.categoryGrid}>
+          <CategoryButton 
+            active={stop.category === 'hotel'} 
+            onClick={() => onUpdateStop(stop.id, { category: 'hotel' })}
+            icon={<Bed size={12} />}
+            title="Hotel"
+          />
+          <CategoryButton 
+            active={stop.category === 'restaurant'} 
+            onClick={() => onUpdateStop(stop.id, { category: 'restaurant' })}
+            icon={<Utensils size={12} />}
+            title="Food"
+          />
+          <CategoryButton 
+            active={stop.category === 'sightseeing'} 
+            onClick={() => onUpdateStop(stop.id, { category: 'sightseeing' })}
+            icon={<Camera size={12} />}
+            title="Sight"
+          />
+          <CategoryButton 
+            active={stop.category === 'transport'} 
+            onClick={() => onUpdateStop(stop.id, { category: 'transport' })}
+            icon={<Car size={12} />}
+            title="Travel"
+          />
+          <CategoryButton 
+            active={stop.category === 'other' || !stop.category} 
+            onClick={() => onUpdateStop(stop.id, { category: 'other' })}
+            icon={<HelpCircle size={12} />}
+            title="Other"
+          />
+        </div>
+      </div>
+
+      <button 
+        className={styles.deleteButton}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemoveStop(stop.id);
+        }}
+      >
+        <Trash2 size={16} />
+      </button>
+    </div>
+  );
 }
 
 function CategoryButton({ active, onClick, icon, title }: { active: boolean, onClick: () => void, icon: React.ReactNode, title: string }) {

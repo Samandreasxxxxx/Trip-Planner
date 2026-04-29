@@ -18,6 +18,7 @@ interface MapProps {
 
 export interface MapRef {
   getScreenshot: () => Promise<string>;
+  startFlyover: () => void;
 }
 
 const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, ref) => {
@@ -34,7 +35,40 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
         resolve(map.getCanvas().toDataURL('image/png'));
       });
       map.triggerRepaint();
-    })
+    }),
+    startFlyover: () => {
+      const map = mapRef.current;
+      if (!map || stops.length === 0) return;
+
+      let stopIndex = 0;
+      
+      const flyToNext = () => {
+        if (stopIndex >= stops.length) {
+          // Reset to overview
+          const bounds = new mapboxgl.LngLatBounds();
+          stops.forEach(s => bounds.extend([s.lng, s.lat]));
+          map.fitBounds(bounds, { padding: 80, duration: 2000, pitch: 0, bearing: 0 });
+          return;
+        }
+
+        const stop = stops[stopIndex];
+        map.flyTo({
+          center: [stop.lng, stop.lat],
+          zoom: 15,
+          pitch: 60,
+          bearing: (stopIndex * 45) % 360,
+          duration: 3000,
+          essential: true
+        });
+
+        stopIndex++;
+        map.once('moveend', () => {
+          setTimeout(flyToNext, 1000);
+        });
+      };
+
+      flyToNext();
+    }
   }));
 
   // Keep track of the latest callback without re-triggering effects
@@ -63,6 +97,25 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
     mapRef.current.on('load', () => {
       const map = mapRef.current;
       if (!map) return;
+
+      // Add 3D terrain
+      map.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512
+      });
+      map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+      // Add sky layer
+      map.addLayer({
+        'id': 'sky',
+        'type': 'sky',
+        'paint': {
+          'sky-type': 'atmosphere',
+          'sky-atmosphere-sun': [0.0, 0.0],
+          'sky-atmosphere-sun-intensity': 15
+        }
+      });
 
       // Add route source and layer
       map.addSource('route', {
