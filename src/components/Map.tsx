@@ -39,6 +39,7 @@ export default function Map({ stops, focusLocation, onMapClick }: MapProps) {
       pitch: 0,
       bearing: 0,
       antialias: true,
+      preserveDrawingBuffer: true, // Required for capturing map screenshots
     });
 
     mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');

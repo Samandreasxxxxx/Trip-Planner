@@ -324,10 +324,17 @@
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.saveButton {
+.actionButtons {
+  display: flex;
+  gap: 0.75rem;
   width: 100%;
-  background: #6366f1;
-  color: white;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: none;
   padding: 0.875rem;
   border-radius: 12px;
@@ -336,23 +343,39 @@
   transition: all 0.3s;
 }
 
-.saveButton:hover {
-  background: #4f46e5;
-  transform: translateY(-2px);
+.actionButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
-@media print {
-  .panel {
-    position: static;
-    width: 100%;
-    background: white;
-    color: black;
-    box-shadow: none;
-  }
-  .closeButton, .reorderButtons, .deleteButton, .footer, .clearAllButton {
-    display: none !important;
-  }
-  .title, .statValue, .inlineInputTitle, .inlineInputDesc {
-    color: black !important;
-  }
+.copyBtn {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  flex: 0 0 auto;
+  width: 48px;
+}
+
+.copyBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.exportBtn {
+  background: #6366f1;
+  color: white;
+  flex: 1;
+}
+
+.exportBtn:hover:not(:disabled) {
+  background: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

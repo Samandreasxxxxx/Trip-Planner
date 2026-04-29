@@ -1,8 +1,12 @@
-import React, { useMemo } from 'react';
+'use client';
+
+import React, { useMemo, useState } from 'react';
 import styles from './TripPanel.module.css';
-import { MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, Trash } from 'lucide-react';
+import { MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, Trash, Download, Copy, Loader2, Check } from 'lucide-react';
 import { TripStop } from '@/types';
 import { calculateDistance } from '@/utils/distance';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface TripPanelProps {
   isOpen: boolean;
@@ -26,6 +30,9 @@ export default function TripPanel({
   onClearAll
 }: TripPanelProps) {
 
+  const [isExporting, setIsExporting] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
   const totalDistance = useMemo(() => {
     let total = 0;
     for (let i = 1; i < stops.length; i++) {
@@ -41,6 +48,132 @@ export default function TripPanel({
     
     [newStops[index], newStops[targetIndex]] = [newStops[targetIndex], newStops[index]];
     onReorderStops(newStops);
+  };
+
+  const copyToClipboard = async () => {
+    if (stops.length === 0) return;
+    let text = `My Trip Itinerary (${stops.length} stops, ${totalDistance.toFixed(0)} km)\n\n`;
+    stops.forEach((stop, index) => {
+      text += `${index + 1}. ${stop.title}\n`;
+      if (stop.description) text += `   Notes: ${stop.description}\n`;
+      if (index < stops.length - 1) {
+        const dist = calculateDistance(stop.lat, stop.lng, stops[index+1].lat, stops[index+1].lng);
+        text += `   ↓ Drive ${dist.toFixed(1)} km to next stop\n`;
+      }
+      text += '\n';
+    });
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  const exportToPDF = async () => {
+    if (stops.length === 0) return;
+    setIsExporting(true);
+
+    try {
+      const mapContainer = document.querySelector('.mapboxgl-map') as HTMLElement;
+      if (!mapContainer) throw new Error("Map container not found");
+
+      // Capture map with html2canvas to include markers
+      const canvas = await html2canvas(mapContainer, {
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Page 1: Cover and Map
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(24);
+      pdf.text('Your Trip Itinerary', 15, 20);
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100);
+      pdf.text(`${stops.length} Stops • ${totalDistance.toFixed(0)} km Total Distance`, 15, 30);
+
+      // Add map image (maintain aspect ratio)
+      const imgProps = pdf.getImageProperties(imgData);
+      const margin = 15;
+      const maxWidth = pageWidth - (margin * 2);
+      const mapHeight = (imgProps.height * maxWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'JPEG', margin, 40, maxWidth, mapHeight);
+
+      // Page 2+: Details
+      pdf.addPage();
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(18);
+      pdf.setTextColor(0);
+      pdf.text('Stop Details', 15, 20);
+
+      let yPos = 35;
+      
+      stops.forEach((stop, index) => {
+        // Check if we need a new page
+        if (yPos > pageHeight - 30) {
+          pdf.addPage();
+          yPos = 20;
+        }
+
+        // Stop Number and Title
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(99, 102, 241); // Indigo color
+        pdf.text(`${index + 1}.`, 15, yPos);
+        
+        pdf.setTextColor(0);
+        const splitTitle = pdf.splitTextToSize(stop.title, maxWidth - 15);
+        pdf.text(splitTitle, 25, yPos);
+        yPos += (splitTitle.length * 6) + 2;
+
+        // Notes/Description
+        if (stop.description) {
+          pdf.setFont('helvetica', 'italic');
+          pdf.setFontSize(10);
+          pdf.setTextColor(100);
+          const splitDesc = pdf.splitTextToSize(`Notes: ${stop.description}`, maxWidth - 10);
+          pdf.text(splitDesc, 25, yPos);
+          yPos += (splitDesc.length * 5) + 4;
+        } else {
+          yPos += 2;
+        }
+
+        // Distance to next
+        if (index < stops.length - 1) {
+          const dist = calculateDistance(stop.lat, stop.lng, stops[index+1].lat, stops[index+1].lng);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(9);
+          pdf.setTextColor(150);
+          pdf.text(`↓ ${dist.toFixed(1)} km to next stop`, 25, yPos);
+          yPos += 12;
+        }
+      });
+
+      pdf.save('Trip-Itinerary.pdf');
+
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Make sure all map tiles are loaded.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -136,7 +269,7 @@ export default function TripPanel({
                       className={styles.inlineInputDesc}
                       value={stop.description || ''}
                       onChange={(e) => onUpdateStop(stop.id, { description: e.target.value })}
-                      placeholder="Add comments..."
+                      placeholder="Add notes, times, or details..."
                       rows={1}
                       onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
                     />
@@ -158,11 +291,27 @@ export default function TripPanel({
         </div>
       </div>
 
-      <div className={styles.footer}>
-        <button className={styles.saveButton} onClick={() => window.print()}>
-          Print Itinerary
-        </button>
-      </div>
+      {stops.length > 0 && (
+        <div className={styles.footer}>
+          <div className={styles.actionButtons}>
+            <button 
+              className={`${styles.actionButton} ${styles.copyBtn}`} 
+              onClick={copyToClipboard}
+              title="Copy as text"
+            >
+              {isCopied ? <Check size={18} /> : <Copy size={18} />}
+            </button>
+            <button 
+              className={`${styles.actionButton} ${styles.exportBtn}`} 
+              onClick={exportToPDF}
+              disabled={isExporting}
+            >
+              {isExporting ? <Loader2 size={18} className={styles.spin} /> : <Download size={18} />}
+              <span>{isExporting ? 'Generating PDF...' : 'Export as PDF'}</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
