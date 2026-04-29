@@ -1,4 +1,4 @@
-export type TravelMode = 'driving' | 'walking' | 'cycling';
+export type TravelMode = 'driving' | 'walking' | 'cycling' | 'transit';
 
 export interface TripStop {
   id: string;
@@ -12,6 +12,8 @@ export interface TripStop {
   cost?: number;
   emoji?: string;
   links?: string[];
+  paidBy?: string;
+  splitAmong?: string[];
 }
 
 export interface Trip {
@@ -19,4 +21,6 @@ export interface Trip {
   name: string;
   stops: TripStop[];
   createdAt: number;
+  participants?: string[];
 }
+

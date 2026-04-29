@@ -7,7 +7,8 @@ import {
   Trash, Download, Copy, Loader2, Check, Calendar, Plus,
   Bed, Utensils, Camera, Car, HelpCircle, Clock, DollarSign,
   FolderOpen, Edit2, X, Wand2, Sparkles, Share2, CloudSun, Thermometer,
-  PieChart, Calendar as CalendarIcon, Link as LinkIcon, ExternalLink
+  PieChart, Calendar as CalendarIcon, Link as LinkIcon, ExternalLink,
+  Users, Receipt
 } from 'lucide-react';
 import { TripStop, Trip } from '@/types';
 import { calculateDistance } from '@/utils/distance';
@@ -30,6 +31,7 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import AIPlannerModal from './AIPlannerModal';
 
 interface TripPanelProps {
   isOpen: boolean;
@@ -86,6 +88,8 @@ export default function TripPanel({
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [weather, setWeather] = useState<{temp: number, desc: string} | null>(null);
   const [showBudgetBreakdown, setShowBudgetBreakdown] = useState(false);
+  const [showAIPlanner, setShowAIPlanner] = useState(false);
+  const [showExpenseSplitter, setShowExpenseSplitter] = useState(false);
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
 
@@ -149,9 +153,27 @@ export default function TripPanel({
     return unit === 'km' ? total : total * 0.621371;
   }, [stops, unit]);
 
-  const totalBudget = useMemo(() => {
-    return stops.reduce((sum, stop) => sum + (stop.cost || 0), 0);
-  }, [stops]);
+  const participants = activeTrip?.participants || [];
+
+  const balances = useMemo(() => {
+    const bal: { [key: string]: number } = {};
+    participants.forEach(p => bal[p] = 0);
+    
+    stops.forEach(stop => {
+      if (stop.cost && stop.paidBy) {
+        const amount = stop.cost;
+        const payers = stop.splitAmong || participants;
+        if (payers.length > 0) {
+          const splitAmount = amount / payers.length;
+          bal[stop.paidBy] += amount;
+          payers.forEach(p => {
+            bal[p] -= splitAmount;
+          });
+        }
+      }
+    });
+    return bal;
+  }, [stops, participants]);
 
   const budgetBreakdown = useMemo(() => {
     const breakdown: { [key: string]: number } = {
@@ -478,6 +500,19 @@ export default function TripPanel({
             >
               <HelpCircle size={18} />
             </button>
+            <button 
+              className={styles.headerActionBtn} 
+              title="Expense Splitter" 
+              onClick={() => setShowExpenseSplitter(!showExpenseSplitter)}
+            >
+              <Receipt size={16} />
+            </button>
+            <button 
+              className={styles.headerActionBtn} 
+              onClick={() => setShowAIPlanner(true)}
+            >
+              <Wand2 size={16} />
+            </button>
             <button className={styles.closeButton} onClick={onClose}>
               <ChevronLeft size={20} />
             </button>
@@ -518,7 +553,50 @@ export default function TripPanel({
               <span className={styles.statLabel}>Budget</span>
               <PieChart size={10} style={{marginTop: '2px', color: '#10b981'}} />
             </div>
-            {showBudgetBreakdown && totalBudget > 0 && (
+            {showExpenseSplitter && (
+              <div className={styles.expenseSplitterOverlay}>
+                <div className={styles.breakdownHeader}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <Users size={12} />
+                    <span>Expense Splitter</span>
+                  </div>
+                  <button onClick={() => setShowExpenseSplitter(false)}><X size={12} /></button>
+                </div>
+                
+                <div className={styles.participantSection}>
+                  <div className={styles.participantList}>
+                    {participants.map(p => (
+                      <span key={p} className={styles.participantTag}>{p}</span>
+                    ))}
+                    <button 
+                      className={styles.addParticipantBtn}
+                      onClick={() => {
+                        const name = prompt('Participant name:');
+                        if (name && !participants.includes(name)) {
+                          setTrips(prev => prev.map(t => t.id === activeTripId ? { ...t, participants: [...(t.participants || []), name] } : t));
+                        }
+                      }}
+                    >
+                      <Plus size={10} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className={styles.balanceList}>
+                  {Object.entries(balances).map(([name, bal]) => (
+                    <div key={name} className={styles.balanceRow}>
+                      <span>{name}</span>
+                      <span className={bal >= 0 ? styles.positive : styles.negative}>
+                        {bal >= 0 ? `+ $${bal.toFixed(2)}` : `- $${Math.abs(bal).toFixed(2)}`}
+                      </span>
+                    </div>
+                  ))}
+                  {participants.length === 0 && (
+                    <div className={styles.emptyState}>Add participants to start splitting</div>
+                  )}
+                </div>
+              </div>
+            )}
               <div className={styles.budgetBreakdownOverlay}>
                 <div className={styles.breakdownHeader}>
                   <span>Cost Breakdown</span>
@@ -660,6 +738,20 @@ export default function TripPanel({
           </div>
         </div>
       )}
+
+      <AIPlannerModal 
+        isOpen={showAIPlanner} 
+        onClose={() => setShowAIPlanner(false)}
+        onGenerate={(newStops) => {
+          // Simply append new stops for now
+          setTrips(prev => prev.map(t => {
+            if (t.id === activeTripId) {
+              return { ...t, stops: [...t.stops, ...newStops] };
+            }
+            return t;
+          }));
+        }}
+      />
     </div>
   );
 }
@@ -760,17 +852,29 @@ function SortableStop({
           />
           <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
             <div className={styles.costWrapper}>
-              <DollarSign size={10} className={styles.costIcon} />
-              <input 
-                type="number" 
-                className={styles.costInput}
-                value={stop.cost || ''}
-                placeholder="0"
-                onChange={(e) => onUpdateStop(stop.id, { cost: parseFloat(e.target.value) || 0 })}
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-            <div style={{display: 'flex', gap: '4px'}}>
+            <DollarSign className={styles.costIcon} size={10} />
+            <input 
+              type="number"
+              className={styles.costInput}
+              value={stop.cost || 0}
+              onChange={(e) => onUpdateStop(stop.id, { cost: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          {participants.length > 0 && (
+            <select 
+              className={styles.paidBySelect}
+              value={stop.paidBy || ''}
+              onChange={(e) => onUpdateStop(stop.id, { paidBy: e.target.value })}
+            >
+              <option value="">Paid by...</option>
+              {participants.map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          )}
+        </div>
+        
+        <div style={{display: 'flex', gap: '4px'}}>
              <button 
               className={styles.reorderBtn}
               onClick={(e) => { e.stopPropagation(); changeDay(stop.id, stop.dayNumber - 1); }}

@@ -4,8 +4,8 @@
  * @returns Array of coordinates representing the path.
  */
 export async function fetchDirections(
-  coordinates: [number, number][], 
-  profile: 'driving' | 'walking' | 'cycling' = 'driving'
+  coordinates: [number, number][],
+  mode: 'driving' | 'walking' | 'cycling' | 'transit' = 'driving'
 ): Promise<[number, number][]> {
   if (coordinates.length < 2) return [];
 
@@ -14,6 +14,9 @@ export async function fetchDirections(
     console.error('Mapbox token is missing');
     return coordinates; // Fallback to straight lines
   }
+
+  // Handle transit by falling back to walking for now, as Mapbox directions is driving/walking/cycling
+  const profile = mode === 'transit' ? 'walking' : mode;
 
   // Mapbox Directions API limit is 25 coordinates
   // For simplicity, we just take the first 25 if there are more

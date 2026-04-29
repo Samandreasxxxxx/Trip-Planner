@@ -1,4 +1,4 @@
-import { MapPin, MousePointer2, Plane, Car, Footprints, Bike } from 'lucide-react';
+import { MapPin, MousePointer2, Plane, Car, Footprints, Bike, Train } from 'lucide-react';
 import { TravelMode } from '@/types';
 import styles from './MapToolbar.module.css';
 
@@ -73,6 +73,14 @@ export default function MapToolbar({
         title="Cycling Mode"
       >
         <Bike size={20} />
+      </button>
+
+      <button 
+        className={`${styles.toolButton} ${travelMode === 'transit' ? styles.active : ''}`}
+        onClick={() => onTravelModeChange('transit')}
+        title="Public Transit"
+      >
+        <Train size={20} />
       </button>
     </div>
   );
