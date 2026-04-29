@@ -5,6 +5,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import styles from './Map.module.css';
 import { TripStop } from '@/types';
+import { fetchDirections } from '@/utils/directions';
 
 // Set the access token from your environment variables
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
@@ -77,6 +78,22 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
       });
 
       map.addLayer({
+        id: 'route-glow',
+        type: 'line',
+        source: 'route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#818cf8',
+          'line-width': 8,
+          'line-opacity': 0.2,
+          'line-blur': 4
+        }
+      });
+
+      map.addLayer({
         id: 'route',
         type: 'line',
         source: 'route',
@@ -87,8 +104,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
         paint: {
           'line-color': '#6366f1',
           'line-width': 4,
-          'line-opacity': 0.6,
-          'line-dasharray': [2, 1]
+          'line-opacity': 0.8
         }
       });
     });
@@ -128,19 +144,35 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
     if (!map) return;
 
     // 1. Update Route Line
-    const updateRoute = () => {
+    let isSubscribed = true;
+    const updateRoute = async () => {
       const source = map.getSource('route') as mapboxgl.GeoJSONSource;
       if (!source) return;
 
-      const coordinates = stops.map(s => [s.lng, s.lat]);
-      source.setData({
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates
+      if (stops.length < 2) {
+        if (isSubscribed) {
+          source.setData({
+            type: 'Feature',
+            properties: {},
+            geometry: { type: 'LineString', coordinates: [] }
+          });
         }
-      });
+        return;
+      }
+
+      const rawCoords = stops.map(s => [s.lng, s.lat] as [number, number]);
+      const pathCoords = await fetchDirections(rawCoords);
+
+      if (isSubscribed) {
+        source.setData({
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: pathCoords
+          }
+        });
+      }
     };
 
     if (map.isStyleLoaded()) {
@@ -162,14 +194,29 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
     stops.forEach((stop, index) => {
       const existingMarker = markersRef.current[stop.id];
       const label = (index + 1).toString();
+      
+      const getCategoryColor = (cat?: string) => {
+        switch (cat) {
+          case 'hotel': return '#f59e0b';
+          case 'restaurant': return '#ef4444';
+          case 'sightseeing': return '#10b981';
+          case 'transport': return '#3b82f6';
+          default: return '#6366f1';
+        }
+      };
 
       if (!existingMarker) {
         const el = document.createElement('div');
         el.className = styles.stopMarker;
+        const color = getCategoryColor(stop.category);
+        el.style.backgroundColor = color;
+        el.style.boxShadow = `0 8px 20px ${color}66`;
         el.innerHTML = `<span>${label}</span>`;
 
         const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-          `<h3>${stop.title}</h3>${stop.description ? `<p>${stop.description}</p>` : ''}`
+          `<h3>${stop.title}</h3>
+           ${stop.category ? `<div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">${stop.category}</div>` : ''}
+           ${stop.description ? `<p>${stop.description}</p>` : ''}`
         );
 
         const marker = new mapboxgl.Marker(el)
@@ -180,6 +227,9 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
         markersRef.current[stop.id] = marker;
       } else {
         const el = existingMarker.getElement();
+        const color = getCategoryColor(stop.category);
+        el.style.backgroundColor = color;
+        el.style.boxShadow = `0 8px 20px ${color}66`;
         if (el.innerText !== label) {
           el.innerHTML = `<span>${label}</span>`;
         }
@@ -192,6 +242,10 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick }, 
       stops.forEach(stop => bounds.extend([stop.lng, stop.lat]));
       map.fitBounds(bounds, { padding: 80, maxZoom: 15 });
     }
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [stops, focusLocation]);
 
   return (

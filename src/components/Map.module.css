@@ -53,7 +53,6 @@
 .stopMarker {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
   border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.8);
   color: white;
@@ -62,7 +61,7 @@
   align-items: center;
   font-weight: 800;
   font-size: 14px;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }

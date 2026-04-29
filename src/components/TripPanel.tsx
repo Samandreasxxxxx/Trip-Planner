@@ -2,7 +2,11 @@
 
 import React, { useMemo, useState } from 'react';
 import styles from './TripPanel.module.css';
-import { MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, Trash, Download, Copy, Loader2, Check } from 'lucide-react';
+import { 
+  MapPin, Trash2, Navigation, ChevronLeft, ChevronUp, ChevronDown, 
+  Trash, Download, Copy, Loader2, Check, Calendar, Plus,
+  Bed, Utensils, Camera, Car, HelpCircle, Clock
+} from 'lucide-react';
 import { TripStop } from '@/types';
 import { calculateDistance } from '@/utils/distance';
 import html2canvas from 'html2canvas';
@@ -35,6 +39,20 @@ export default function TripPanel({
   const [isExporting, setIsExporting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
+  // Group stops by day
+  const groupedStops = useMemo(() => {
+    const groups: { [key: number]: TripStop[] } = {};
+    stops.forEach(stop => {
+      if (!groups[stop.dayNumber]) groups[stop.dayNumber] = [];
+      groups[stop.dayNumber].push(stop);
+    });
+    return groups;
+  }, [stops]);
+
+  const days = useMemo(() => {
+    return Object.keys(groupedStops).map(Number).sort((a, b) => a - b);
+  }, [groupedStops]);
+
   const totalDistance = useMemo(() => {
     let total = 0;
     for (let i = 1; i < stops.length; i++) {
@@ -43,7 +61,8 @@ export default function TripPanel({
     return total;
   }, [stops]);
 
-  const moveStop = (index: number, direction: 'up' | 'down') => {
+  const moveStop = (id: string, direction: 'up' | 'down') => {
+    const index = stops.findIndex(s => s.id === id);
     const newStops = [...stops];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= stops.length) return;
@@ -52,16 +71,20 @@ export default function TripPanel({
     onReorderStops(newStops);
   };
 
+  const changeDay = (id: string, newDay: number) => {
+    onUpdateStop(id, { dayNumber: Math.max(1, newDay) });
+  };
+
   const copyToClipboard = async () => {
     if (stops.length === 0) return;
     let text = `My Trip Itinerary (${stops.length} stops, ${totalDistance.toFixed(0)} km)\n\n`;
-    stops.forEach((stop, index) => {
-      text += `${index + 1}. ${stop.title}\n`;
-      if (stop.description) text += `   Notes: ${stop.description}\n`;
-      if (index < stops.length - 1) {
-        const dist = calculateDistance(stop.lat, stop.lng, stops[index+1].lat, stops[index+1].lng);
-        text += `   ↓ Drive ${dist.toFixed(1)} km to next stop\n`;
-      }
+    
+    days.forEach(dayNum => {
+      text += `--- DAY ${dayNum} ---\n`;
+      groupedStops[dayNum].forEach((stop, index) => {
+        text += `${stop.startTime ? `[${stop.startTime}] ` : ''}${stop.title}\n`;
+        if (stop.description) text += `   Notes: ${stop.description}\n`;
+      });
       text += '\n';
     });
     
@@ -128,7 +151,6 @@ export default function TripPanel({
       pdf.setTextColor(100);
       pdf.text(`${stops.length} Stops • ${totalDistance.toFixed(0)} km Total Distance`, 15, 30);
 
-      // Add map image (maintain aspect ratio)
       const imgProps = pdf.getImageProperties(imgData);
       const margin = 15;
       const maxWidth = pageWidth - (margin * 2);
@@ -141,56 +163,56 @@ export default function TripPanel({
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(18);
       pdf.setTextColor(0);
-      pdf.text('Stop Details', 15, 20);
+      pdf.text('Itinerary Details', 15, 20);
 
       let yPos = 35;
       
-      stops.forEach((stop, index) => {
-        // Check if we need a new page
+      days.forEach(dayNum => {
         if (yPos > pageHeight - 30) {
           pdf.addPage();
           yPos = 20;
         }
 
-        // Stop Number and Title
-        pdf.setFontSize(12);
+        pdf.setFontSize(14);
         pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(99, 102, 241); // Indigo color
-        pdf.text(`${index + 1}.`, 15, yPos);
-        
-        pdf.setTextColor(0);
-        const splitTitle = pdf.splitTextToSize(stop.title, maxWidth - 15);
-        pdf.text(splitTitle, 25, yPos);
-        yPos += (splitTitle.length * 6) + 2;
+        pdf.setTextColor(99, 102, 241);
+        pdf.text(`Day ${dayNum}`, 15, yPos);
+        yPos += 10;
 
-        // Notes/Description
-        if (stop.description) {
-          pdf.setFont('helvetica', 'italic');
-          pdf.setFontSize(10);
-          pdf.setTextColor(100);
-          const splitDesc = pdf.splitTextToSize(`Notes: ${stop.description}`, maxWidth - 10);
-          pdf.text(splitDesc, 25, yPos);
-          yPos += (splitDesc.length * 5) + 4;
-        } else {
-          yPos += 2;
-        }
+        groupedStops[dayNum].forEach((stop, index) => {
+          if (yPos > pageHeight - 30) {
+            pdf.addPage();
+            yPos = 20;
+          }
 
-        // Distance to next
-        if (index < stops.length - 1) {
-          const dist = calculateDistance(stop.lat, stop.lng, stops[index+1].lat, stops[index+1].lng);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(9);
-          pdf.setTextColor(150);
-          pdf.text(`↓ ${dist.toFixed(1)} km to next stop`, 25, yPos);
-          yPos += 12;
-        }
+          pdf.setFontSize(11);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0);
+          const timeStr = stop.startTime ? `[${stop.startTime}] ` : '';
+          const title = `${timeStr}${stop.title}`;
+          const splitTitle = pdf.splitTextToSize(title, maxWidth - 10);
+          pdf.text(splitTitle, 20, yPos);
+          yPos += (splitTitle.length * 5) + 2;
+
+          if (stop.description) {
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(9);
+            pdf.setTextColor(100);
+            const splitDesc = pdf.splitTextToSize(stop.description, maxWidth - 15);
+            pdf.text(splitDesc, 20, yPos);
+            yPos += (splitDesc.length * 4) + 4;
+          } else {
+            yPos += 2;
+          }
+        });
+        yPos += 5;
       });
 
       pdf.save('Trip-Itinerary.pdf');
 
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Make sure all map tiles are loaded.");
+      alert("Failed to generate PDF.");
     } finally {
       setIsExporting(false);
     }
@@ -213,8 +235,8 @@ export default function TripPanel({
             </div>
             <div className={styles.statDivider}></div>
             <div className={styles.statItem}>
-              <span className={styles.statValue}>{totalDistance.toFixed(0)}</span>
-              <span className={styles.statLabel}>Total km</span>
+              <span className={styles.statValue}>{days.length}</span>
+              <span className={styles.statLabel}>Days</span>
             </div>
             <button className={styles.clearAllButton} onClick={onClearAll} title="Clear All">
               <Trash size={16} />
@@ -230,71 +252,139 @@ export default function TripPanel({
               <MapPin size={40} className={styles.emptyIcon} />
             </div>
             <h3>No stops added yet</h3>
-            <p>Press <span className={styles.shortcut}>Alt + A</span> to select the Pin tool, then click the map to add a stop.</p>
+            <p>Use the search or click the map with the Pin tool to start planning.</p>
           </div>
         )}
 
         <div className={styles.stopsList}>
-          {stops.map((stop, index) => {
-            let distanceToPrev = 0;
-            if (index > 0) {
-              const prev = stops[index - 1];
-              distanceToPrev = calculateDistance(prev.lat, prev.lng, stop.lat, stop.lng);
-            }
-
-            return (
-              <React.Fragment key={stop.id}>
-                {index > 0 && (
-                  <div className={styles.distanceIndicator}>
-                    <div className={styles.line}></div>
-                    <div className={styles.distanceBadge}>
-                      <Navigation size={12} />
-                      <span>{distanceToPrev.toFixed(1)} km</span>
-                    </div>
-                  </div>
-                )}
-                <div 
-                  className={styles.stopCard} 
-                  onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
-                >
-                  <div className={styles.stopCardLeft}>
-                    <div className={styles.stopNumber}>{index + 1}</div>
-                    <div className={styles.reorderButtons}>
-                      <button 
-                        disabled={index === 0} 
-                        onClick={(e) => { e.stopPropagation(); moveStop(index, 'up'); }}
-                        className={styles.reorderBtn}
-                      >
-                        <ChevronUp size={14} />
-                      </button>
-                      <button 
-                        disabled={index === stops.length - 1} 
-                        onClick={(e) => { e.stopPropagation(); moveStop(index, 'down'); }}
-                        className={styles.reorderBtn}
-                      >
-                        <ChevronDown size={14} />
-                      </button>
-                    </div>
-                  </div>
-                  <StopInputs 
-                    stop={stop} 
-                    onUpdateStop={onUpdateStop} 
-                    onStopClick={onStopClick} 
-                  />
+          {days.map(dayNum => (
+            <div key={dayNum} className={styles.daySection}>
+              <div className={styles.dayHeader}>
+                <div className={styles.dayTitle}>Day {dayNum}</div>
+                {dayNum === days[days.length - 1] && (
                   <button 
-                    className={styles.deleteButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveStop(stop.id);
+                    className={styles.addDayBtn}
+                    onClick={() => {
+                      // Adding a dummy stop to create a new day if empty, or just implied by future additions
+                      // Actually better to just show "Day X" if stops exist in it.
                     }}
-                    title="Remove Stop"
                   >
-                    <Trash2 size={16} />
+                    <Calendar size={12} style={{marginRight: '4px'}} />
+                    Plan Next Day
                   </button>
-                </div>
-              </React.Fragment>
-            );
-          })}
+                )}
+              </div>
+              
+              {groupedStops[dayNum].map((stop, index) => {
+                const globalIndex = stops.findIndex(s => s.id === stop.id);
+                return (
+                  <div 
+                    key={stop.id}
+                    className={styles.stopCard} 
+                    onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
+                  >
+                    <div className={styles.stopCardLeft}>
+                      <CategoryIcon category={stop.category} />
+                      <div className={styles.reorderButtons}>
+                        <button 
+                          disabled={globalIndex === 0} 
+                          onClick={(e) => { e.stopPropagation(); moveStop(stop.id, 'up'); }}
+                          className={styles.reorderBtn}
+                        >
+                          <ChevronUp size={14} />
+                        </button>
+                        <button 
+                          disabled={globalIndex === stops.length - 1} 
+                          onClick={(e) => { e.stopPropagation(); moveStop(stop.id, 'down'); }}
+                          className={styles.reorderBtn}
+                        >
+                          <ChevronDown size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.stopInfo}>
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <input 
+                          type="time" 
+                          className={styles.timeInput}
+                          value={stop.startTime || ''}
+                          onChange={(e) => onUpdateStop(stop.id, { startTime: e.target.value })}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div style={{display: 'flex', gap: '4px'}}>
+                           <button 
+                            className={styles.reorderBtn}
+                            onClick={(e) => { e.stopPropagation(); changeDay(stop.id, stop.dayNumber - 1); }}
+                            title="Move to Previous Day"
+                            disabled={stop.dayNumber === 1}
+                           >
+                            <ChevronLeft size={14} />
+                           </button>
+                           <button 
+                            className={styles.reorderBtn}
+                            onClick={(e) => { e.stopPropagation(); changeDay(stop.id, stop.dayNumber + 1); }}
+                            title="Move to Next Day"
+                           >
+                            <ChevronUp size={14} style={{transform: 'rotate(90deg)'}} />
+                           </button>
+                        </div>
+                      </div>
+                      
+                      <StopInputs 
+                        stop={stop} 
+                        onUpdateStop={onUpdateStop} 
+                        onStopClick={onStopClick} 
+                      />
+                      
+                      <div className={styles.categoryGrid}>
+                        <CategoryButton 
+                          active={stop.category === 'hotel'} 
+                          onClick={() => onUpdateStop(stop.id, { category: 'hotel' })}
+                          icon={<Bed size={12} />}
+                          title="Hotel"
+                        />
+                        <CategoryButton 
+                          active={stop.category === 'restaurant'} 
+                          onClick={() => onUpdateStop(stop.id, { category: 'restaurant' })}
+                          icon={<Utensils size={12} />}
+                          title="Food"
+                        />
+                        <CategoryButton 
+                          active={stop.category === 'sightseeing'} 
+                          onClick={() => onUpdateStop(stop.id, { category: 'sightseeing' })}
+                          icon={<Camera size={12} />}
+                          title="Sight"
+                        />
+                        <CategoryButton 
+                          active={stop.category === 'transport'} 
+                          onClick={() => onUpdateStop(stop.id, { category: 'transport' })}
+                          icon={<Car size={12} />}
+                          title="Travel"
+                        />
+                        <CategoryButton 
+                          active={stop.category === 'other' || !stop.category} 
+                          onClick={() => onUpdateStop(stop.id, { category: 'other' })}
+                          icon={<HelpCircle size={12} />}
+                          title="Other"
+                        />
+                      </div>
+                    </div>
+
+                    <button 
+                      className={styles.deleteButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveStop(stop.id);
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -323,6 +413,28 @@ export default function TripPanel({
   );
 }
 
+function CategoryIcon({ category }: { category?: string }) {
+  switch (category) {
+    case 'hotel': return <div className={styles.stopNumber} style={{background: '#f59e0b'}}><Bed size={12} /></div>;
+    case 'restaurant': return <div className={styles.stopNumber} style={{background: '#ef4444'}}><Utensils size={12} /></div>;
+    case 'sightseeing': return <div className={styles.stopNumber} style={{background: '#10b981'}}><Camera size={12} /></div>;
+    case 'transport': return <div className={styles.stopNumber} style={{background: '#3b82f6'}}><Car size={12} /></div>;
+    default: return <div className={styles.stopNumber}><MapPin size={12} /></div>;
+  }
+}
+
+function CategoryButton({ active, onClick, icon, title }: { active: boolean, onClick: () => void, icon: React.ReactNode, title: string }) {
+  return (
+    <button 
+      className={`${styles.categoryBtn} ${active ? styles.active : ''}`}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      title={title}
+    >
+      {icon}
+    </button>
+  );
+}
+
 function StopInputs({ 
   stop, 
   onUpdateStop, 
@@ -335,7 +447,6 @@ function StopInputs({
   const [title, setTitle] = useState(stop.title);
   const [desc, setDesc] = useState(stop.description || '');
 
-  // Keep synced if updated externally (like from reverse geocoding)
   React.useEffect(() => { setTitle(stop.title); }, [stop.title]);
   React.useEffect(() => { setDesc(stop.description || ''); }, [stop.description]);
 
@@ -355,7 +466,7 @@ function StopInputs({
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
         onBlur={() => onUpdateStop(stop.id, { description: desc })}
-        placeholder="Add notes, times, or details..."
+        placeholder="Add notes..."
         rows={1}
         onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
       />

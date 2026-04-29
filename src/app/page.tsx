@@ -62,7 +62,9 @@ export default function Home() {
       lng,
       lat,
       title: 'Loading location...',
-      description: ''
+      description: '',
+      dayNumber: 1,
+      category: 'other'
     }]);
 
     // Reverse geocode to get a nice name
@@ -91,7 +93,9 @@ export default function Home() {
       lng,
       lat,
       title: placeName,
-      description: ''
+      description: '',
+      dayNumber: 1,
+      category: 'other'
     }]);
     setFocusLocation({ lng, lat, id: newId });
   };

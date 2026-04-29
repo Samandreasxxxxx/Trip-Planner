@@ -206,6 +206,47 @@
 .stopsList {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+}
+
+.daySection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  margin-top: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.dayTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.addDayBtn {
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addDayBtn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #fff;
 }
 
 .stopCard {
@@ -317,6 +358,46 @@
 .deleteButton:hover {
   color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
+}
+
+.categoryGrid {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.categoryBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 6px;
+  color: #52525b;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+}
+
+.categoryBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.categoryBtn.active {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+}
+
+.timeInput {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #818cf8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+  outline: none;
 }
 
 .footer {
