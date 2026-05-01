@@ -1492,6 +1492,23 @@
   background: #27272a;
 }
 
+.singleLinkInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px;
+  width: 100%;
+  outline: none;
+  margin-left: 8px;
+}
+
+.singleLinkInput:focus {
+  border-bottom-color: #f97316;
+}
+
+
 .addFixedCostBtn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);

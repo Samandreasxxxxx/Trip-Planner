@@ -312,104 +312,44 @@ export default function TripPanel({
       const contentWidth = pageWidth - (margin * 2);
 
       // --- Helper: Draw Logo ---
-      const addLogo = async (x = pageWidth - 45, y = 10) => {
+      const addLogo = async () => {
         try {
-          pdf.addImage('/logo.png', 'PNG', x, y, 25, 25);
-        } catch (e) { /* ignore */ }
+          // Logo placeholder: 4x4 cm in top right
+          pdf.addImage('/logo.png', 'PNG', pageWidth - 40 - 10, 10, 40, 40);
+        } catch (e) {
+          // If no logo, draw a minimalist placeholder
+          pdf.setDrawColor(200);
+          pdf.rect(pageWidth - 40 - 10, 10, 40, 40);
+          pdf.setFontSize(8);
+          pdf.text('LOGO', pageWidth - 30, 30, { align: 'center' });
+        }
       };
 
-      // --- Page 1: Cover ---
-      // Premium gradient-like background
-      pdf.setFillColor(15, 23, 42); // Navy
-      pdf.rect(0, 0, pageWidth, 110, 'F');
-      
-      await addLogo(pageWidth/2 - 12.5, 25);
 
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(32);
+      await addLogo();
+
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFontSize(24);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('TRIP ITINERARY', pageWidth / 2, 70, { align: 'center' });
+      pdf.text(activeTrip?.name || 'Trip Itinerary', margin, 25);
       
-      pdf.setFontSize(18);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(148, 163, 184);
-      pdf.text(activeTrip?.name || 'My Adventure', pageWidth / 2, 85, { align: 'center' });
-
-      // Summary Statement
-      pdf.setTextColor(15, 23, 42);
-      pdf.setFontSize(14);
-      pdf.text(`We are going to explore ${stops[0]?.title.split(',')[0]} and surroundings`, margin, 125);
-      pdf.setFontSize(11);
-      pdf.setTextColor(100);
-      pdf.text(`A ${days.length}-day journey planned for ${numPeople} traveler${numPeople > 1 ? 's' : ''}.`, margin, 132);
-
-      // Stats Cards
-      let yPos = 145;
-      pdf.setFillColor(248, 250, 252);
-      pdf.roundedRect(margin, yPos, contentWidth, 35, 4, 4, 'F');
-      
-      const totalDist = stops.reduce((acc, stop, i) => {
-        if (i === 0) return 0;
-        return acc + calculateDistance(stops[i-1].lat, stops[i-1].lng, stop.lat, stop.lng);
-      }, 0);
-      const perPersonTotal = stops.reduce((acc, stop) => acc + (stop.cost || 0), 0);
-      const grandTotal = perPersonTotal * numPeople;
-
-      pdf.setTextColor(15, 23, 42);
       pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('TOTAL ESTIMATED BUDGET', margin + 10, yPos + 12);
-      pdf.setFontSize(20);
-      pdf.text(`$${grandTotal.toLocaleString()}`, margin + 10, yPos + 25);
-      
-      pdf.setFontSize(9);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(100);
-      pdf.text(`($${perPersonTotal.toLocaleString()} per person)`, margin + 55, yPos + 24);
+      pdf.text(`${days.length} Days | ${numPeople} Traveler${numPeople > 1 ? 's' : ''} | Total: $${totalBudget.toLocaleString()}`, margin, 32);
 
-      // Map Preview
-      yPos += 45;
+      // Map Preview (smaller)
+      let yPos = 40;
       const imgProps = pdf.getImageProperties(mapDataUrl);
       const mapHeight = (imgProps.height * contentWidth) / imgProps.width;
-      pdf.addImage(mapDataUrl, 'JPEG', margin, yPos, contentWidth, Math.min(mapHeight, 70));
+      pdf.addImage(mapDataUrl, 'JPEG', margin, yPos, contentWidth, Math.min(mapHeight, 50));
+      yPos += Math.min(mapHeight, 50) + 15;
 
-      // --- Page 2: Budget Breakdown & Start of Itinerary ---
-      pdf.addPage();
-      await addLogo();
-      
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(15, 23, 42);
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Financial Breakdown', margin, 30);
-      
-      // Breakdown by Category
-      const categories = ['sightseeing', 'restaurant', 'hotel', 'transport', 'other'];
-      let catY = 45;
-      categories.forEach(cat => {
-        const catStops = stops.filter(s => s.category === cat);
-        const catTotal = catStops.reduce((sum, s) => sum + (s.cost || 0), 0) * numPeople;
-        if (catTotal > 0) {
-          pdf.setFontSize(11);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(80);
-          pdf.text(cat.charAt(0).toUpperCase() + cat.slice(1), margin, catY);
-          pdf.text(`$${catTotal.toLocaleString()}`, pageWidth - margin, catY, { align: 'right' });
-          
-          // Progress bar style
-          pdf.setFillColor(241, 245, 249);
-          pdf.rect(margin, catY + 2, contentWidth, 2, 'F');
-          pdf.setFillColor(249, 115, 22);
-          pdf.rect(margin, catY + 2, (catTotal / Math.max(1, grandTotal)) * contentWidth, 2, 'F');
-          
-          catY += 15;
-        }
-      });
-
-      yPos = catY + 10;
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Daily Itinerary', margin, yPos);
-      yPos += 12;
+      pdf.text('Itinerary', margin, yPos);
+      yPos += 10;
 
       for (const dayNum of days) {
         const dayStops = groupedStops[dayNum];
@@ -418,42 +358,43 @@ export default function TripPanel({
         if (yPos > pageHeight - 30) { pdf.addPage(); await addLogo(); yPos = 30; }
 
         pdf.setFillColor(241, 245, 249);
-        pdf.roundedRect(margin, yPos, contentWidth, 10, 2, 2, 'F');
+        pdf.roundedRect(margin, yPos, contentWidth, 8, 1, 1, 'F');
 
         pdf.setTextColor(15, 23, 42);
-        pdf.setFontSize(12);
-        pdf.text(`DAY ${dayNum}`, margin + 5, yPos + 7);
-        
-        const dayTotal = dayStops.reduce((sum, s) => sum + (s.cost || 0), 0) * numPeople;
-        pdf.setFontSize(10);
-        pdf.text(`Est. $${dayTotal.toLocaleString()}`, pageWidth - margin - 5, yPos + 7, { align: 'right' });
-        yPos += 18;
+        pdf.setFontSize(11);
+        pdf.text(`DAY ${dayNum}`, margin + 5, yPos + 6);
+        yPos += 14;
 
+        let stopIndex = 1;
         for (const stop of dayStops) {
           if (yPos > pageHeight - 20) { pdf.addPage(); await addLogo(); yPos = 30; }
 
-          pdf.setFontSize(11);
+          pdf.setFontSize(10);
           pdf.setFont('helvetica', 'bold');
           pdf.setTextColor(0, 0, 0);
-          pdf.text(`${stop.startTime || '--:--'}  ${stop.title}`, margin + 5, yPos);
+          pdf.text(`${stopIndex}. ${stop.startTime || '--:--'}  ${stop.title}`, margin + 5, yPos);
           
           if (stop.cost) {
-            pdf.setFontSize(10);
+            pdf.setFontSize(9);
             pdf.text(`$${(stop.cost * numPeople).toLocaleString()}`, pageWidth - margin - 5, yPos, { align: 'right' });
           }
           
-          pdf.setFontSize(9);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(120);
-          pdf.text(stop.category?.toUpperCase() || 'VISIT', margin + 20, yPos + 5);
+          if (stop.description) {
+            yPos += 5;
+            pdf.setFontSize(8);
+            pdf.setFont('helvetica', 'italic');
+            pdf.setTextColor(100);
+            pdf.text(`Note: ${stop.description}`, margin + 10, yPos);
+          }
           
-          yPos += 12;
+          stopIndex++;
+          yPos += 10;
         }
         yPos += 5;
       }
 
-
       pdf.save(`${activeTrip?.name || 'Trip'}_Itinerary.pdf`);
+
     } catch (error) {
       console.error('PDF generation error:', error);
       alert('Failed to generate PDF. Please try again.');
@@ -1079,8 +1020,8 @@ function StopInputs({
           onChange={(e) => setTitle(e.target.value)}
           onBlur={() => onUpdateStop(stop.id, { title })}
           placeholder="Stop Name"
-          onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
         />
+
       </div>
 
 
@@ -1117,47 +1058,23 @@ function StopInputs({
         onBlur={() => onUpdateStop(stop.id, { description: desc })}
         placeholder="Add notes..."
         rows={1}
-        onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
       />
+
 
       <div className={styles.linksSection}>
         <div className={styles.linksHeader}>
           <LinkIcon size={12} />
-          <span>Links & Docs</span>
-        </div>
-        <div className={styles.linksList}>
-          {stop.links?.map((link, idx) => (
-            <div key={idx} className={styles.linkItem}>
-              <a href={link} target="_blank" rel="noopener noreferrer" className={styles.linkAnchor}>
-                <ExternalLink size={10} />
-                <span>{link.replace(/^https?:\/\//, '').slice(0, 20)}...</span>
-              </a>
-              <button 
-                className={styles.removeLinkBtn}
-                onClick={() => {
-                  const newLinks = [...(stop.links || [])];
-                  newLinks.splice(idx, 1);
-                  onUpdateStop(stop.id, { links: newLinks });
-                }}
-              >
-                <X size={10} />
-              </button>
-            </div>
-          ))}
-          <button 
-            className={styles.addLinkBtn}
-            onClick={() => {
-              const url = prompt('Enter URL (e.g. https://google.com):');
-              if (url) {
-                onUpdateStop(stop.id, { links: [...(stop.links || []), url] });
-              }
-            }}
-          >
-            <Plus size={10} />
-            <span>Add Link</span>
-          </button>
+          <input 
+            type="text"
+            className={styles.singleLinkInput}
+            value={stop.links?.[0] || ''}
+            placeholder="Add website/link..."
+            onChange={(e) => onUpdateStop(stop.id, { links: [e.target.value] })}
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       </div>
+
     </div>
   );
 }

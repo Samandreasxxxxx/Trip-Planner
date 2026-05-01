@@ -3,13 +3,15 @@
   right: 1.5rem;
   top: 50%;
   transform: translateY(-50%);
+  width: 72px;
   background: #000000;
   border: 1px solid #27272a;
   border-radius: 0px;
-  padding: 0.5rem;
+  padding: 0.75rem 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.75rem;
   z-index: 100;
   box-shadow: 10px 10px 0px rgba(255, 255, 255, 0.03);
 }
