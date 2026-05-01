@@ -253,17 +253,25 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
     const map = mapRef.current;
     if (!map) return;
 
-    if (showTerrain) {
-      if (!map.getSource('mapbox-dem')) {
-        map.addSource('mapbox-dem', {
-          'type': 'raster-dem',
-          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-          'tileSize': 512
-        });
+    const updateTerrain = () => {
+      if (showTerrain) {
+        if (!map.getSource('mapbox-dem')) {
+          map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            'tileSize': 512
+          });
+        }
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+      } else {
+        map.setTerrain(null as any);
       }
-      map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+    };
+
+    if (map.isStyleLoaded()) {
+      updateTerrain();
     } else {
-      map.setTerrain(null as any);
+      map.once('style.load', updateTerrain);
     }
   }, [showTerrain]);
 
