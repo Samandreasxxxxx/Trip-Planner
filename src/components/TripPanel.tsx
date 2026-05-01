@@ -707,7 +707,7 @@ export default function TripPanel({
               onClick={copyToClipboard}
               title="Copy as text"
             >
-              {isCopied ? <Check size={18} /> : <Copy size={18} />}
+              {isCopied ? <Check size={16} /> : <Copy size={16} />}
             </button>
             <button 
               className={`${styles.actionButton} ${styles.shareBtn}`} 
@@ -715,7 +715,7 @@ export default function TripPanel({
               disabled={isSharing || stops.length === 0}
               title="Share Trip"
             >
-              {shareLink ? <Check size={18} /> : isSharing ? <Loader2 size={18} className={styles.spin} /> : <Share2 size={18} />}
+              {shareLink ? <Check size={16} /> : isSharing ? <Loader2 size={16} className={styles.spin} /> : <Share2 size={16} />}
               <span>{shareLink ? 'Link Copied!' : isSharing ? 'Sharing...' : 'Share Trip'}</span>
             </button>
             <button 
@@ -723,7 +723,7 @@ export default function TripPanel({
               onClick={exportToPDF}
               disabled={isExporting}
             >
-              {isExporting ? <Loader2 size={18} className={styles.spin} /> : <Download size={18} />}
+              {isExporting ? <Loader2 size={16} className={styles.spin} /> : <Download size={16} />}
               <span>Save as PDF</span>
             </button>
             <button 
@@ -731,7 +731,7 @@ export default function TripPanel({
               onClick={onOpenInGoogleMaps}
               title="Open in Google Maps"
             >
-              <ExternalLink size={18} />
+              <ExternalLink size={16} />
               <span>Navigate</span>
             </button>
             <button 
@@ -739,7 +739,7 @@ export default function TripPanel({
               onClick={exportToCalendar}
               title="Sync to Calendar"
             >
-              <Calendar size={18} />
+              <Calendar size={16} />
 
               <span>ICS</span>
             </button>

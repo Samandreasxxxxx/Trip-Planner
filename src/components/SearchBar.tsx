@@ -102,7 +102,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
     <div className={styles.searchContainer}>
       <div className={`${styles.searchWrapper} ${showDropdown ? styles.active : ''}`}>
         <div className={styles.searchIcon}>
-          {isLoading ? <Loader2 className={styles.spin} size={18} /> : <Search size={18} />}
+          {isLoading ? <Loader2 className={styles.spin} size={16} /> : <Search size={16} />}
         </div>
         <input
           type="text"

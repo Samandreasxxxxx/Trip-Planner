@@ -18,13 +18,13 @@ export default function MapToolbar({
   onToggleTerrain,
   onCycleStyle
 }: MapToolbarProps) {
-  const [position, setPosition] = useState({ x: 24, y: 150 });
+  const [position, setPosition] = useState({ right: 24, top: 150 });
   const [isDragging, setIsDragging] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setPosition({ x: 24, y: window.innerHeight / 2 - 100 });
+      setPosition({ right: 24, top: window.innerHeight / 2 - 100 });
     }
   }, []);
 
@@ -36,8 +36,8 @@ export default function MapToolbar({
   const handlePointerMove = (e: React.PointerEvent) => {
     if (isDragging) {
       setPosition(prev => ({
-        x: prev.x + e.movementX,
-        y: prev.y + e.movementY
+        right: prev.right - e.movementX,
+        top: prev.top + e.movementY
       }));
     }
   };
@@ -51,7 +51,7 @@ export default function MapToolbar({
     <div 
       className={styles.toolbar} 
       ref={toolbarRef}
-      style={{ left: `${position.x}px`, top: `${position.y}px`, transform: 'none' }}
+      style={{ right: `${position.right}px`, top: `${position.top}px`, transform: 'none', left: 'auto' }}
     >
       <div 
         className={styles.dragHandle}
@@ -60,7 +60,7 @@ export default function MapToolbar({
         onPointerUp={handlePointerUp}
         title="Drag Toolbar"
       >
-        <GripHorizontal size={20} />
+        <GripHorizontal size={14} />
       </div>
 
       <div className={styles.divider}></div>
@@ -70,7 +70,7 @@ export default function MapToolbar({
         onClick={() => onToolChange('select')}
         title="Selection Tool (Alt+H)"
       >
-        <MousePointer2 size={22} />
+        <MousePointer2 size={16} />
       </button>
       
       <button 
@@ -78,7 +78,7 @@ export default function MapToolbar({
         onClick={() => onToolChange('pin')}
         title="Drop Pin tool (Alt+A)"
       >
-        <MapPin size={22} />
+        <MapPin size={16} />
         <span className={styles.toolLabel}>Pin</span>
       </button>
 
@@ -97,7 +97,7 @@ export default function MapToolbar({
         onClick={onCycleStyle}
         title="Cycle Map Style"
       >
-        <Globe size={22} />
+        <Globe size={16} />
       </button>
     </div>
   );
