@@ -28,5 +28,7 @@ export interface Trip {
   createdAt: number;
   participants?: string[];
   numPeople?: number;
+  fixedCosts?: { id: string, name: string, cost: number, category: string }[];
 }
+
 

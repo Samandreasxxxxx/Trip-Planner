@@ -16,6 +16,8 @@ export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [activeTripId, setActiveTripId] = useState<string | null>(null);
   const [stops, setStops] = useState<TripStop[]>([]);
+  const activeTrip = trips.find(t => t.id === activeTripId);
+
   const [activeTool, setActiveTool] = useState<'select' | 'pin'>('select');
   const [focusLocation, setFocusLocation] = useState<{lng: number, lat: number, id: string} | null>(null);
   const [showTripPanel, setShowTripPanel] = useState(true);
@@ -159,7 +161,8 @@ export default function Home() {
       const data = await res.json();
       
       const placeName = data.features?.[0]?.text || 'New Stop';
-      const insights = generateInsights(placeName, stopCategory || 'other');
+      const insights = generateInsights(placeName, 'other');
+
       
       setStops(prev => prev.map(stop => 
         stop.id === newId ? { ...stop, title: placeName, ...insights } : stop
@@ -367,8 +370,6 @@ export default function Home() {
         onDeleteTrip={handleDeleteTrip}
         onRenameTrip={(id, name) => setTrips(prev => prev.map(t => t.id === id ? { ...t, name } : t))}
         onOptimizeDay={handleOptimizeDay}
-        onRenameTrip={handleRenameTrip}
-        onOptimizeDay={handleOptimizeDay}
         onShareTrip={handleShareTrip}
         getMapScreenshot={() => mapRef.current ? mapRef.current.getScreenshot() : Promise.resolve('')}
         onOpenInGoogleMaps={openInGoogleMaps}
@@ -377,7 +378,18 @@ export default function Home() {
         onUpdateNumPeople={(num) => {
           setTrips(prev => prev.map(t => t.id === activeTripId ? { ...t, numPeople: num } : t));
         }}
+        onUpdateParticipants={(participants) => {
+          setTrips(prev => prev.map(t => t.id === activeTripId ? { ...t, participants } : t));
+        }}
+        onAddStops={(newStops) => {
+          setStops(prev => [...prev, ...newStops]);
+        }}
+        fixedCosts={activeTrip?.fixedCosts || []}
+        onUpdateFixedCosts={(fixedCosts) => {
+          setTrips(prev => prev.map(t => t.id === activeTripId ? { ...t, fixedCosts } : t));
+        }}
       />
+
       <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>
         <SearchBar onSelect={handleSearchSelect} />
         <MapToolbar 

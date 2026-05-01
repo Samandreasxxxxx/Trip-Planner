@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { Compass, Map as MapIcon, Menu, Sun, Moon } from 'lucide-react';
+import { Compass, Map as MapIcon, Menu, Sun, Moon, Sparkles, X } from 'lucide-react';
 
 interface SidebarProps {
   onToggleTripPanel: () => void;

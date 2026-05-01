@@ -1410,3 +1410,82 @@
 .stopCard:last-child .stopConnector {
   display: none;
 }
+.fixedCostsSection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.fixedCostsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a1a1aa;
+  margin-bottom: 0.75rem;
+}
+
+.addFixedCostBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.addFixedCostBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-primary);
+}
+
+.fixedCostsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fixedCostRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.fixedCostInfo {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.fixedCostInfo .fixedCostName {
+  color: #fff;
+  font-weight: 500;
+}
+
+.fixedCostInfo .fixedCostAmount {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.removeFixedCostBtn {
+  background: transparent;
+  border: none;
+  color: #52525b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.removeFixedCostBtn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}

@@ -49,8 +49,10 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
 
   useEffect(() => {
     if (query.length < 2) {
-      if (results.length > 0) setResults([]);
-      if (query.length > 0) setShowDropdown(false);
+      if (results.length > 0 || showDropdown) {
+        setResults([]);
+        setShowDropdown(false);
+      }
       return;
     }
 

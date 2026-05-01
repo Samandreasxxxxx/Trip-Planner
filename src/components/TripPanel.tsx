@@ -9,8 +9,9 @@ import {
   FolderOpen, Edit2, X, Wand2, Sparkles, Share2,
   PieChart, Link as LinkIcon, ExternalLink,
   Users, Receipt, Calendar, Navigation, CloudSun, Thermometer,
-  Star, Clock, Info, Map as MapIcon, Plane
+  Star, Info, Map as MapIcon, Plane, Clock
 } from 'lucide-react';
+
 import { TripStop, Trip } from '@/types';
 import { calculateDistance } from '@/utils/distance';
 import html2canvas from 'html2canvas';
@@ -58,7 +59,13 @@ interface TripPanelProps {
   onToggleBudgetDashboard: () => void;
   numPeople: number;
   onUpdateNumPeople: (num: number) => void;
+  onUpdateParticipants: (participants: string[]) => void;
+  onAddStops: (stops: TripStop[]) => void;
+  fixedCosts: { id: string, name: string, cost: number, category: string }[];
+  onUpdateFixedCosts: (costs: { id: string, name: string, cost: number, category: string }[]) => void;
 }
+
+
 
 export default function TripPanel({ 
   isOpen,
@@ -83,8 +90,14 @@ export default function TripPanel({
   onOpenInGoogleMaps,
   onToggleBudgetDashboard,
   numPeople,
-  onUpdateNumPeople
+  onUpdateNumPeople,
+  onUpdateParticipants,
+  onAddStops,
+  fixedCosts,
+  onUpdateFixedCosts
 }: TripPanelProps) {
+
+
 
   const [isExporting, setIsExporting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -113,6 +126,7 @@ export default function TripPanel({
       return () => clearTimeout(timer);
     }
   }, []);
+
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
 
@@ -230,12 +244,20 @@ export default function TripPanel({
       const cat = stop.category || 'other';
       breakdown[cat] += (stop.cost || 0);
     });
+    fixedCosts.forEach(fc => {
+      const cat = fc.category || 'other';
+      breakdown[cat] += (fc.cost || 0);
+    });
     return breakdown;
-  }, [stops]);
+  }, [stops, fixedCosts]);
+
 
   const totalBudget = useMemo(() => {
-    return stops.reduce((sum, stop) => sum + (stop.cost || 0), 0);
-  }, [stops]);
+    const stopsTotal = stops.reduce((sum, stop) => sum + (stop.cost || 0), 0);
+    const fixedTotal = fixedCosts.reduce((sum, fc) => sum + (fc.cost || 0), 0);
+    return stopsTotal + fixedTotal;
+  }, [stops, fixedCosts]);
+
 
   const moveStop = (id: string, direction: 'up' | 'down') => {
     const index = stops.findIndex(s => s.id === id);
@@ -425,14 +447,15 @@ export default function TripPanel({
       pdf.text('Daily Itinerary', margin, yPos);
       yPos += 12;
 
-      days.forEach((dayNum) => {
+      for (const dayNum of days) {
         const dayStops = groupedStops[dayNum];
-        if (dayStops.length === 0) return;
+        if (dayStops.length === 0) continue;
 
         if (yPos > pageHeight - 30) { pdf.addPage(); await addLogo(); yPos = 30; }
 
         pdf.setFillColor(241, 245, 249);
         pdf.roundedRect(margin, yPos, contentWidth, 10, 2, 2, 'F');
+
         pdf.setTextColor(15, 23, 42);
         pdf.setFontSize(12);
         pdf.text(`DAY ${dayNum}`, margin + 5, yPos + 7);
@@ -442,7 +465,7 @@ export default function TripPanel({
         pdf.text(`Est. $${dayTotal.toLocaleString()}`, pageWidth - margin - 5, yPos + 7, { align: 'right' });
         yPos += 18;
 
-        dayStops.forEach((stop) => {
+        for (const stop of dayStops) {
           if (yPos > pageHeight - 20) { pdf.addPage(); await addLogo(); yPos = 30; }
 
           pdf.setFontSize(11);
@@ -461,9 +484,10 @@ export default function TripPanel({
           pdf.text(stop.category?.toUpperCase() || 'VISIT', margin + 20, yPos + 5);
           
           yPos += 12;
-        });
+        }
         yPos += 5;
-      });
+      }
+
 
       pdf.save(`${activeTrip?.name || 'Trip'}_Itinerary.pdf`);
     } catch (error) {
@@ -676,8 +700,9 @@ export default function TripPanel({
                       onClick={() => {
                         const name = prompt('Participant name:');
                         if (name && !participants.includes(name)) {
-                          setTrips(prev => prev.map(t => t.id === activeTripId ? { ...t, participants: [...(t.participants || []), name] } : t));
+                          onUpdateParticipants([...participants, name]);
                         }
+
                       }}
                     >
                       <Plus size={10} />
@@ -738,8 +763,43 @@ export default function TripPanel({
                     </div>
                   ))}
                 </div>
+
+                <div className={styles.fixedCostsSection}>
+                  <div className={styles.fixedCostsHeader}>
+                    <span>Additional Trip Expenses</span>
+                    <button 
+                      className={styles.addFixedCostBtn}
+                      onClick={() => {
+                        const name = prompt('Expense name (e.g. Flights):');
+                        const cost = parseFloat(prompt('Amount:') || '0');
+                        if (name && !isNaN(cost)) {
+                          onUpdateFixedCosts([...fixedCosts, { id: crypto.randomUUID(), name, cost, category: 'other' }]);
+                        }
+                      }}
+                    >
+                      <Plus size={10} /> Add
+                    </button>
+                  </div>
+                  <div className={styles.fixedCostsList}>
+                    {fixedCosts.map(fc => (
+                      <div key={fc.id} className={styles.fixedCostRow}>
+                        <div className={styles.fixedCostInfo}>
+                          <span className={styles.fixedCostName}>{fc.name}</span>
+                          <span className={styles.fixedCostAmount}>${fc.cost.toLocaleString()}</span>
+                        </div>
+                        <button 
+                          className={styles.removeFixedCostBtn}
+                          onClick={() => onUpdateFixedCosts(fixedCosts.filter(f => f.id !== fc.id))}
+                        >
+                          <Trash size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 
                 <div className={styles.totalBudgetFooter}>
+
                   <div className={styles.travelerControl}>
                     <Users size={14} />
                     <input 
@@ -886,7 +946,8 @@ export default function TripPanel({
               onClick={exportToCalendar}
               title="Sync to Calendar"
             >
-              <CalendarIcon size={18} />
+              <Calendar size={18} />
+
               <span>ICS</span>
             </button>
           </div>
@@ -897,14 +958,10 @@ export default function TripPanel({
         isOpen={showAIPlanner} 
         onClose={() => setShowAIPlanner(false)}
         onGenerate={(newStops) => {
-          // Simply append new stops for now
-          setTrips(prev => prev.map(t => {
-            if (t.id === activeTripId) {
-              return { ...t, stops: [...t.stops, ...newStops] };
-            }
-            return t;
-          }));
+          onAddStops(newStops);
+          setShowAIPlanner(false);
         }}
+
       />
     </div>
   );
@@ -1182,12 +1239,13 @@ function StopInputs({
 
   React.useEffect(() => { 
     if (stop.title !== title) setTitle(stop.title); 
-  }, [stop.title]);
+  }, [stop.title, title]);
   
   React.useEffect(() => { 
     const currentDesc = stop.description || '';
     if (currentDesc !== desc) setDesc(currentDesc); 
-  }, [stop.description]);
+  }, [stop.description, desc]);
+
 
   return (
     <div className={styles.stopInfo} onClick={(e) => e.stopPropagation()}>
@@ -1208,20 +1266,8 @@ function StopInputs({
           placeholder="Stop Name"
           onClick={() => onStopClick(stop.lng, stop.lat, stop.id)}
         />
-        {participants.length > 0 && (
-          <select 
-            className={styles.paidBySelect}
-            value={stop.paidBy || ''}
-            onChange={(e) => onUpdateStop(stop.id, { paidBy: e.target.value })}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <option value="">Paid by...</option>
-            {participants.map(p => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-        )}
       </div>
+
 
       {showEmojiPicker && (
         <div className={styles.emojiGrid}>
