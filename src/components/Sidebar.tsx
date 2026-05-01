@@ -42,6 +42,16 @@ export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps
         >
           <Compass size={24} />
         </button>
+        <button 
+          className={styles.navItem} 
+          title="Fix My Route (AI Optimize)"
+          onClick={() => {
+            const btn = document.querySelector('[title="Fix My Whole Route (Global Optimization)"]') as HTMLButtonElement;
+            if (btn) btn.click();
+          }}
+        >
+          <Sparkles size={24} style={{color: '#10b981'}} />
+        </button>
       </nav>
       
       <div className={styles.quoteSection}>

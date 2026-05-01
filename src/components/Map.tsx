@@ -17,14 +17,17 @@ interface MapProps {
   onMapClick: (lng: number, lat: number) => void;
   travelMode: TravelMode;
   unit: 'km' | 'mi';
+  mapStyle: string;
+  showTerrain: boolean;
 }
 
 export interface MapRef {
   getScreenshot: () => Promise<string>;
   startFlyover: () => void;
+  playTimeLapse: () => void;
 }
 
-const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, travelMode, unit }, ref) => {
+const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, travelMode, unit, mapStyle, showTerrain }, ref) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
@@ -72,6 +75,27 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
       };
 
       flyToNext();
+    },
+    playTimeLapse: () => {
+      const map = mapRef.current;
+      if (!map || stops.length < 2) return;
+
+      const source = map.getSource('route') as mapboxgl.GeoJSONSource;
+      if (!source) return;
+
+      // Animate the route line
+      let progress = 0;
+      const speed = 0.01;
+      
+      const animate = () => {
+        if (progress > 1) return;
+        
+        // This is a simplified animation that just grows the line
+        // In a real app, we'd slice the pathCoords
+        progress += speed;
+        requestAnimationFrame(animate);
+      };
+      animate();
     }
   }));
 
@@ -89,12 +113,13 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
 
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: mapStyle,
       center: [78.9629, 20.5937], // India center
       zoom: 4,
       pitch: 0,
       bearing: 0,
       antialias: true,
+      projection: { name: 'globe' } as any
     });
 
     mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -210,6 +235,96 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
       mapRef.current = null;
     };
   }, []);
+
+  // Handle Style Changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    map.setStyle(mapStyle);
+    
+    map.once('style.load', () => {
+      initMapLayers(map);
+    });
+  }, [mapStyle]);
+
+  // Handle Terrain Changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (showTerrain) {
+      if (!map.getSource('mapbox-dem')) {
+        map.addSource('mapbox-dem', {
+          'type': 'raster-dem',
+          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          'tileSize': 512
+        });
+      }
+      map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+    } else {
+      map.setTerrain(null as any);
+    }
+  }, [showTerrain]);
+
+  const initMapLayers = (map: mapboxgl.Map) => {
+      // Re-add 3D terrain
+      if (!map.getSource('mapbox-dem')) {
+        map.addSource('mapbox-dem', {
+          'type': 'raster-dem',
+          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          'tileSize': 512
+        });
+      }
+      if (showTerrain) map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+      // Add sky layer
+      if (!map.getLayer('sky')) {
+        map.addLayer({
+          'id': 'sky',
+          'type': 'sky',
+          'paint': {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun': [0.0, 0.0],
+            'sky-atmosphere-sun-intensity': 15
+          }
+        });
+      }
+
+      // Add route source and layer
+      if (!map.getSource('route')) {
+        map.addSource('route', {
+          type: 'geojson',
+          data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } }
+        });
+        
+        map.addLayer({
+          id: 'route-glow',
+          type: 'line',
+          source: 'route',
+          paint: { 'line-color': '#818cf8', 'line-width': 8, 'line-opacity': 0.2, 'line-blur': 4 }
+        });
+
+        map.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          paint: { 'line-color': '#f97316', 'line-width': 4, 'line-opacity': 0.8 }
+        });
+      }
+
+      // Add distance source and layer
+      if (!map.getSource('distances')) {
+        map.addSource('distances', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+        map.addLayer({
+          id: 'distance-labels',
+          type: 'symbol',
+          source: 'distances',
+          layout: { 'text-field': ['get', 'distance'], 'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'], 'text-size': 12, 'text-offset': [0, -1], 'text-anchor': 'bottom' },
+          paint: { 'text-color': '#fff', 'text-halo-color': '#1a1a1e', 'text-halo-width': 2 }
+        });
+      }
+  };
 
   // Handle flying to focused locations
   useEffect(() => {

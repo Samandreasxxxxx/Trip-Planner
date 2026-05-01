@@ -53,6 +53,8 @@ interface TripPanelProps {
   onOptimizeDay: (dayNum: number) => void;
   onShareTrip: () => Promise<string | null>;
   getMapScreenshot: () => Promise<string>;
+  onOpenInGoogleMaps: () => void;
+  onToggleBudgetDashboard: () => void;
 }
 
 export default function TripPanel({ 
@@ -74,7 +76,9 @@ export default function TripPanel({
   onRenameTrip,
   onOptimizeDay,
   onShareTrip,
-  getMapScreenshot
+  getMapScreenshot,
+  onOpenInGoogleMaps,
+  onToggleBudgetDashboard
 }: TripPanelProps) {
 
   const [isExporting, setIsExporting] = useState(false);
@@ -623,6 +627,15 @@ export default function TripPanel({
             >
               <Wand2 size={16} />
             </button>
+            <button 
+              className={styles.headerActionBtn} 
+              title="Fix My Whole Route (Global Optimization)" 
+              onClick={() => {
+                days.forEach(d => onOptimizeDay(d));
+              }}
+            >
+              <Navigation size={16} />
+            </button>
             <button className={styles.closeButton} onClick={onClose}>
               <ChevronLeft size={20} />
             </button>
@@ -866,6 +879,14 @@ export default function TripPanel({
             >
               {isExporting ? <Loader2 size={18} className={styles.spin} /> : <Download size={18} />}
               <span>Save as PDF</span>
+            </button>
+            <button 
+              className={`${styles.actionButton} ${styles.googleMapsBtn}`} 
+              onClick={onOpenInGoogleMaps}
+              title="Open in Google Maps"
+            >
+              <ExternalLink size={18} />
+              <span>Navigate</span>
             </button>
             <button 
               className={`${styles.actionButton} ${styles.calendarBtn}`} 

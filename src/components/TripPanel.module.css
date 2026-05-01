@@ -1013,6 +1013,18 @@
   box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
 }
 
+.googleMapsBtn {
+  background: #1a73e8 !important;
+  border-color: #1a73e8 !important;
+  color: white !important;
+}
+
+.googleMapsBtn:hover {
+  background: #1557b0 !important;
+  box-shadow: 0 8px 20px rgba(26, 115, 232, 0.4) !important;
+  transform: translateY(-2px);
+}
+
 .calendarBtn {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);

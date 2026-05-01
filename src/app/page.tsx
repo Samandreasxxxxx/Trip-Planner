@@ -20,6 +20,9 @@ export default function Home() {
   const [showTripPanel, setShowTripPanel] = useState(true);
   const [unit, setUnit] = useState<'km' | 'mi'>('km');
   const [travelMode, setTravelMode] = useState<TravelMode>('driving');
+  const [showTerrain, setShowTerrain] = useState(false);
+  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/dark-v11');
+  const [showBudgetDashboard, setShowBudgetDashboard] = useState(false);
   
   const mapRef = useRef<MapRef>(null);
 
@@ -278,6 +281,26 @@ export default function Home() {
     return null;
   };
 
+  const handleCycleStyle = () => {
+    const styles = [
+      'mapbox://styles/mapbox/dark-v11',
+      'mapbox://styles/mapbox/light-v11',
+      'mapbox://styles/mapbox/satellite-v9',
+      'mapbox://styles/mapbox/streets-v11'
+    ];
+    const currentIndex = styles.indexOf(mapStyle);
+    setMapStyle(styles[(currentIndex + 1) % styles.length]);
+  };
+
+  const openInGoogleMaps = () => {
+    if (stops.length === 0) return;
+    const origin = `${stops[0].lat},${stops[0].lng}`;
+    const destination = `${stops[stops.length-1].lat},${stops[stops.length-1].lng}`;
+    const waypoints = stops.slice(1, -1).map(s => `${s.lat},${s.lng}`).join('|');
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=${travelMode}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <main className={styles.main}>
       <Sidebar onToggleTripPanel={() => setShowTripPanel(!showTripPanel)} isPanelOpen={showTripPanel} />
@@ -301,6 +324,8 @@ export default function Home() {
         onOptimizeDay={handleOptimizeDay}
         onShareTrip={handleShareTrip}
         getMapScreenshot={() => mapRef.current ? mapRef.current.getScreenshot() : Promise.resolve('')}
+        onOpenInGoogleMaps={openInGoogleMaps}
+        onToggleBudgetDashboard={() => setShowBudgetDashboard(!showBudgetDashboard)}
       />
       <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>
         <SearchBar onSelect={handleSearchSelect} />
@@ -311,6 +336,11 @@ export default function Home() {
           hasStops={stops.length > 0}
           travelMode={travelMode}
           onTravelModeChange={setTravelMode}
+          showTerrain={showTerrain}
+          onToggleTerrain={() => setShowTerrain(!showTerrain)}
+          mapStyle={mapStyle}
+          onCycleStyle={handleCycleStyle}
+          onPlayTimelapse={() => mapRef.current?.playTimeLapse()}
         />
         <Map 
           ref={mapRef}
@@ -319,6 +349,8 @@ export default function Home() {
           onMapClick={handleMapClick} 
           travelMode={travelMode}
           unit={unit}
+          mapStyle={mapStyle}
+          showTerrain={showTerrain}
         />
       </div>
     </main>

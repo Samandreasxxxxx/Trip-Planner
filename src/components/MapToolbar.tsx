@@ -1,4 +1,4 @@
-import { MapPin, MousePointer2, Plane, Car, Footprints, Bike, Train } from 'lucide-react';
+import { MapPin, MousePointer2, Plane, Car, Footprints, Bike, Train, Globe, Play, Layers } from 'lucide-react';
 import { TravelMode } from '@/types';
 import styles from './MapToolbar.module.css';
 
@@ -9,6 +9,11 @@ interface MapToolbarProps {
   hasStops: boolean;
   travelMode: TravelMode;
   onTravelModeChange: (mode: TravelMode) => void;
+  showTerrain: boolean;
+  onToggleTerrain: () => void;
+  mapStyle: string;
+  onCycleStyle: () => void;
+  onPlayTimelapse: () => void;
 }
 
 export default function MapToolbar({ 
@@ -17,7 +22,12 @@ export default function MapToolbar({
   onFly, 
   hasStops,
   travelMode,
-  onTravelModeChange
+  onTravelModeChange,
+  showTerrain,
+  onToggleTerrain,
+  mapStyle,
+  onCycleStyle,
+  onPlayTimelapse
 }: MapToolbarProps) {
   return (
     <div className={styles.toolbar}>
@@ -36,6 +46,32 @@ export default function MapToolbar({
       >
         <MapPin size={22} />
         <span className={styles.toolLabel}>Pin</span>
+      </button>
+
+      <div className={styles.divider}></div>
+
+      <button 
+        className={`${styles.toolButton} ${showTerrain ? styles.active : ''}`}
+        onClick={onToggleTerrain}
+        title="Toggle 3D Terrain"
+      >
+        <div className={styles.terrainIcon}>3D</div>
+      </button>
+
+      <button 
+        className={styles.toolButton}
+        onClick={onCycleStyle}
+        title="Cycle Map Style"
+      >
+        <Globe size={22} />
+      </button>
+
+      <button 
+        className={styles.toolButton}
+        onClick={onPlayTimelapse}
+        title="Play Journey Timelapse"
+      >
+        <Play size={20} />
       </button>
 
       <div className={styles.divider}></div>
