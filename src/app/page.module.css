@@ -13,33 +13,42 @@
   position: relative;
   transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
   overflow: hidden;
+  width: 100vw;
+  height: 100vh;
 }
 
-.mapArea.panelOpen {
-  margin-left: 420px;
-}
-
-/* A subtle gradient overlay on the map area to give it a premium feel */
-.mapArea::after {
-  content: '';
+.topRightNav {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 200px;
-  background: linear-gradient(to bottom, var(--bg-dark) 0%, rgba(15, 23, 42, 0.8) 40%, transparent 100%);
-  pointer-events: none;
-  z-index: 10;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 100;
+  display: flex;
+  gap: 0.5rem;
+  background: #000000;
+  border: 1px solid #27272a;
+  padding: 0.5rem;
+  box-shadow: 5px 5px 0px rgba(255, 255, 255, 0.03);
 }
 
-.mapArea::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 200px;
-  background: linear-gradient(to top, var(--bg-dark) 0%, rgba(15, 23, 42, 0.8) 40%, transparent 100%);
-  pointer-events: none;
-  z-index: 10;
+.navBtn {
+  background: transparent;
+  border: none;
+  color: #a1a1aa;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
 }
+
+.navBtn:hover {
+  background: #ffffff;
+  color: #000000;
+}
+
+:global(body.light) .lightIcon { display: none; }
+:global(body:not(.light)) .darkIcon { display: none; }

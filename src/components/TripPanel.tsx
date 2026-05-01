@@ -108,24 +108,10 @@ export default function TripPanel({
   const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
-  const [weather, setWeather] = useState<{temp: number, desc: string} | null>(null);
   const [showBudgetBreakdown, setShowBudgetBreakdown] = useState(false);
-  const [showAIPlanner, setShowAIPlanner] = useState(false);
-  const [showExpenseSplitter, setShowExpenseSplitter] = useState(false);
-  const [showHint, setShowHint] = useState(false);
 
-  // Show shortcut hint on mount
-  React.useEffect(() => {
-    const hasSeenHint = localStorage.getItem('hasSeenShortcutHint');
-    if (!hasSeenHint) {
-      setShowHint(true);
-      const timer = setTimeout(() => {
-        setShowHint(false);
-        localStorage.setItem('hasSeenShortcutHint', 'true');
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+
+
 
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
@@ -136,28 +122,6 @@ export default function TripPanel({
     }
   }, [activeTrip]);
 
-  // Fetch weather for the first stop
-  React.useEffect(() => {
-    if (stops.length > 0) {
-      const firstStop = stops[0];
-      const fetchWeather = async () => {
-        try {
-          const res = await fetch(`https://wttr.in/${firstStop.lat},${firstStop.lng}?format=j1`);
-          const data = await res.json();
-          const current = data.current_condition[0];
-          setWeather({
-            temp: parseInt(current.temp_C),
-            desc: current.weatherDesc[0].value
-          });
-        } catch (e) {
-          console.error('Failed to fetch weather');
-        }
-      };
-      fetchWeather();
-    } else {
-      setWeather(null);
-    }
-  }, [stops]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -610,55 +574,12 @@ export default function TripPanel({
         <div className={styles.headerTop}>
           <h2 className={styles.title}>Your Adventure</h2>
           <div className={styles.headerActions}>
-            <button 
-              className={styles.headerActionBtn} 
-              onClick={() => setShowShortcuts(!showShortcuts)}
-              title="Helpful Shortcuts"
-            >
-              <HelpCircle size={18} />
-            </button>
-            <button 
-              className={styles.headerActionBtn} 
-              title="Split Costs with Friends" 
-              onClick={() => setShowExpenseSplitter(!showExpenseSplitter)}
-            >
-              <Receipt size={16} />
-            </button>
-            <button 
-              className={styles.headerActionBtn} 
-              title="Inspire My Next Adventure" 
-              onClick={() => setShowAIPlanner(true)}
-            >
-              <Wand2 size={16} />
-            </button>
-            <button 
-              className={styles.headerActionBtn} 
-              title="Fix My Whole Route (Global Optimization)" 
-              onClick={() => {
-                days.forEach(d => onOptimizeDay(d));
-              }}
-            >
-              <Navigation size={16} />
-            </button>
             <button className={styles.closeButton} onClick={onClose}>
               <ChevronLeft size={20} />
             </button>
           </div>
         </div>
-        {showShortcuts && (
-          <div className={styles.shortcutsOverlay}>
-            <div className={styles.shortcutsHeader}>
-              <span>Keyboard Shortcuts</span>
-              <button onClick={() => setShowShortcuts(false)}><Check size={14} /></button>
-            </div>
-            <div className={styles.shortcutRow}>
-              <kbd>Alt</kbd> + <kbd>H</kbd> <span>Select Tool</span>
-            </div>
-            <div className={styles.shortcutRow}>
-              <kbd>Alt</kbd> + <kbd>A</kbd> <span>Add Pin Tool</span>
-            </div>
-          </div>
-        )}
+
         {stops.length > 0 && (
           <div className={styles.headerStats}>
             <div className={styles.statItem}>
@@ -680,51 +601,7 @@ export default function TripPanel({
               <span className={styles.statLabel}>Budget</span>
               <PieChart size={10} style={{marginTop: '2px', color: '#10b981'}} />
             </div>
-            {showExpenseSplitter && (
-              <div className={styles.expenseSplitterOverlay}>
-                <div className={styles.breakdownHeader}>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                    <Users size={12} />
-                    <span>Expense Splitter</span>
-                  </div>
-                  <button onClick={() => setShowExpenseSplitter(false)}><X size={12} /></button>
-                </div>
-                
-                <div className={styles.participantSection}>
-                  <div className={styles.participantList}>
-                    {participants.map(p => (
-                      <span key={p} className={styles.participantTag}>{p}</span>
-                    ))}
-                    <button 
-                      className={styles.addParticipantBtn}
-                      onClick={() => {
-                        const name = prompt('Participant name:');
-                        if (name && !participants.includes(name)) {
-                          onUpdateParticipants([...participants, name]);
-                        }
 
-                      }}
-                    >
-                      <Plus size={10} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className={styles.balanceList}>
-                  {Object.entries(balances).map(([name, bal]) => (
-                    <div key={name} className={styles.balanceRow}>
-                      <span>{name}</span>
-                      <span className={bal >= 0 ? styles.positive : styles.negative}>
-                        {bal >= 0 ? `+ $${bal.toFixed(2)}` : `- $${Math.abs(bal).toFixed(2)}`}
-                      </span>
-                    </div>
-                  ))}
-                  {participants.length === 0 && (
-                    <div className={styles.emptyState}>Add participants to start splitting</div>
-                  )}
-                </div>
-              </div>
-            )}
             {showBudgetBreakdown && (
               <div className={styles.budgetBreakdownOverlay}>
                 <div className={styles.breakdownHeader}>
@@ -818,17 +695,7 @@ export default function TripPanel({
                 </div>
               </div>
             )}
-            {weather && (
-              <>
-                <div className={styles.statDivider}></div>
-                <div className={styles.statItem} title={weather.desc}>
-                  <span className={styles.statValue}>
-                    {unit === 'km' ? `${weather.temp}°C` : `${Math.round(weather.temp * 9/5 + 32)}°F`}
-                  </span>
-                  <span className={styles.statLabel}>Weather</span>
-                </div>
-              </>
-            )}
+
             <div className={styles.statDivider}></div>
             <button className={styles.clearAllButton} onClick={() => {
               if (window.confirm('Clear all stops from this adventure?')) {
@@ -862,22 +729,7 @@ export default function TripPanel({
               <div key={dayNum} className={styles.daySection}>
                 <div className={styles.dayHeader}>
                   <div className={styles.dayTitle}>Day {dayNum}</div>
-                  {groupedStops[dayNum].length > 2 && (
-                    <button 
-                      className={styles.optimizeBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOptimizingDay(dayNum);
-                        onOptimizeDay(dayNum);
-                        setTimeout(() => setOptimizingDay(null), 2000);
-                      }}
-                      disabled={optimizingDay === dayNum}
-                      title="Optimize Route for this Day"
-                    >
-                      {optimizingDay === dayNum ? <Loader2 size={12} className={styles.spin} /> : <Sparkles size={12} />}
-                      <span>Optimize</span>
-                    </button>
-                  )}
+
                 </div>
                 
                 <SortableContext 
@@ -954,15 +806,6 @@ export default function TripPanel({
         </div>
       )}
 
-      <AIPlannerModal 
-        isOpen={showAIPlanner} 
-        onClose={() => setShowAIPlanner(false)}
-        onGenerate={(newStops) => {
-          onAddStops(newStops);
-          setShowAIPlanner(false);
-        }}
-
-      />
     </div>
   );
 }
@@ -1165,34 +1008,6 @@ function SortableStop({
           />
         </div>
 
-        {(stop.bestTime || stop.bestTransport || stop.proTip) && (
-          <div className={styles.aiInsightsSection}>
-            <div className={styles.insightsHeader}>
-              <Sparkles size={10} />
-              <span>AI Insights</span>
-            </div>
-            <div className={styles.insightsGrid}>
-              {stop.bestTime && (
-                <div className={styles.insightItem} title="Best Time to Visit">
-                  <Clock size={10} />
-                  <span>{stop.bestTime}</span>
-                </div>
-              )}
-              {stop.bestTransport && (
-                <div className={styles.insightItem} title="Recommended Transport">
-                  <Car size={10} />
-                  <span>{stop.bestTransport}</span>
-                </div>
-              )}
-            </div>
-            {stop.proTip && (
-              <div className={styles.proTip}>
-                <Info size={10} />
-                <p>{stop.proTip}</p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <button 

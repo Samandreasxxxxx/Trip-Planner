@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Map, { MapRef } from '@/components/Map';
-import Sidebar from '@/components/Sidebar';
 import TripPanel from '@/components/TripPanel';
 import SearchBar from '@/components/SearchBar';
 import MapToolbar from '@/components/MapToolbar';
+import LoginModal from '@/components/LoginModal';
+import { LogOut, Moon, Sun } from 'lucide-react';
 import styles from './page.module.css';
 import { TripStop, TravelMode, Trip } from '@/types';
 import { optimizeRoute } from '@/utils/optimization';
 import { supabase } from '@/lib/supabase';
-import LoginModal from '@/components/LoginModal';
 
 export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -27,6 +27,8 @@ export default function Home() {
   const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/dark-v11');
   const [showBudgetDashboard, setShowBudgetDashboard] = useState(false);
   const [user, setUser] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   const [isLoaded, setIsLoaded] = useState(false);
   
   const mapRef = useRef<MapRef>(null);
@@ -345,13 +347,30 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      {!user && <LoginModal onLogin={handleLogin} />}
-      <Sidebar 
-        onToggleTripPanel={() => setShowTripPanel(!showTripPanel)} 
-        isPanelOpen={showTripPanel} 
-        userName={user || ''}
-        onLogout={handleLogout}
-      />
+      {showLoginModal && <LoginModal onLogin={(u) => { handleLogin(u); setShowLoginModal(false); }} />}
+
+      <div className={styles.topRightNav}>
+        <button 
+          className={styles.navBtn} 
+          onClick={() => {
+            document.body.classList.toggle('light');
+          }}
+          title="Toggle Theme"
+        >
+          <Sun size={16} className={styles.lightIcon} />
+          <Moon size={16} className={styles.darkIcon} />
+        </button>
+        {user ? (
+          <button className={styles.navBtn} onClick={handleLogout} title="Sign Out">
+            {user.slice(0, 1).toUpperCase()} <LogOut size={14} style={{marginLeft: '4px'}} />
+          </button>
+        ) : (
+          <button className={styles.navBtn} onClick={() => setShowLoginModal(true)}>
+            Sign In
+          </button>
+        )}
+      </div>
+
       <TripPanel 
         isOpen={showTripPanel}
         onClose={() => setShowTripPanel(false)}
@@ -395,15 +414,10 @@ export default function Home() {
         <MapToolbar 
           activeTool={activeTool} 
           onToolChange={setActiveTool} 
-          onFly={() => mapRef.current?.startFlyover()}
-          hasStops={stops.length > 0}
-          travelMode={travelMode}
-          onTravelModeChange={setTravelMode}
           showTerrain={showTerrain}
           onToggleTerrain={() => setShowTerrain(!showTerrain)}
           mapStyle={mapStyle}
           onCycleStyle={handleCycleStyle}
-          onPlayTimelapse={() => mapRef.current?.playTimeLapse()}
         />
         <Map 
           ref={mapRef}

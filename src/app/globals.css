@@ -1,27 +1,29 @@
 :root {
-  --bg-dark: #0f172a; /* Deep Navy Adventure */
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent-primary: #f97316; /* Vibrant Tangerine */
-  --accent-secondary: #06b6d4; /* Tropical Teal */
-  --accent-glow: rgba(249, 115, 22, 0.4);
-  --glass-bg: rgba(15, 23, 42, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --card-bg: rgba(30, 41, 59, 0.4);
-  --card-hover: rgba(30, 41, 59, 0.6);
-  --radius-lg: 28px;
-  --radius-md: 18px;
-  --radius-sm: 14px;
+  --bg-dark: #000000; /* Absolute Black */
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  --accent-primary: #ffffff; /* White accents */
+  --accent-secondary: #52525b; 
+  --accent-glow: rgba(255, 255, 255, 0.1);
+  --glass-bg: #09090b;
+  --glass-border: #27272a;
+  --card-bg: #18181b;
+  --card-hover: #27272a;
+  --radius-lg: 0px;
+  --radius-md: 0px;
+  --radius-sm: 0px;
 }
 
 body.light {
-  --bg-dark: #fff7ed; /* Warm Sunset Sand */
-  --text-main: #431407; /* Earthy Brown */
-  --text-muted: #9a3412;
-  --glass-bg: rgba(255, 251, 235, 0.85);
-  --glass-border: rgba(124, 45, 18, 0.1);
-  --card-bg: rgba(254, 215, 170, 0.2);
-  --card-hover: rgba(254, 215, 170, 0.4);
+  --bg-dark: #ffffff; /* Pure White */
+  --text-main: #000000;
+  --text-muted: #71717a;
+  --glass-bg: #f4f4f5;
+  --glass-border: #e4e4e7;
+  --card-bg: #ffffff;
+  --card-hover: #f4f4f5;
+  --accent-primary: #000000;
+  --accent-glow: rgba(0, 0, 0, 0.05);
 }
 
 * {

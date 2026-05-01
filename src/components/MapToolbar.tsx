@@ -1,36 +1,70 @@
-import { MapPin, MousePointer2, Plane, Car, Footprints, Bike, Train, Globe, Play, Layers } from 'lucide-react';
-import { TravelMode } from '@/types';
+import { MapPin, MousePointer2, Globe, GripHorizontal } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 import styles from './MapToolbar.module.css';
 
 interface MapToolbarProps {
   activeTool: 'select' | 'pin';
   onToolChange: (tool: 'select' | 'pin') => void;
-  onFly: () => void;
-  hasStops: boolean;
-  travelMode: TravelMode;
-  onTravelModeChange: (mode: TravelMode) => void;
   showTerrain: boolean;
   onToggleTerrain: () => void;
   mapStyle: string;
   onCycleStyle: () => void;
-  onPlayTimelapse: () => void;
 }
 
 export default function MapToolbar({ 
   activeTool, 
   onToolChange, 
-  onFly, 
-  hasStops,
-  travelMode,
-  onTravelModeChange,
   showTerrain,
   onToggleTerrain,
-  mapStyle,
-  onCycleStyle,
-  onPlayTimelapse
+  onCycleStyle
 }: MapToolbarProps) {
+  const [position, setPosition] = useState({ x: 24, y: 150 });
+  const [isDragging, setIsDragging] = useState(false);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPosition({ x: 24, y: window.innerHeight / 2 - 100 });
+    }
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (isDragging) {
+      setPosition(prev => ({
+        x: prev.x + e.movementX,
+        y: prev.y + e.movementY
+      }));
+    }
+  };
+  
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
   return (
-    <div className={styles.toolbar}>
+    <div 
+      className={styles.toolbar} 
+      ref={toolbarRef}
+      style={{ left: `${position.x}px`, top: `${position.y}px`, transform: 'none' }}
+    >
+      <div 
+        className={styles.dragHandle}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        title="Drag Toolbar"
+      >
+        <GripHorizontal size={20} />
+      </div>
+
+      <div className={styles.divider}></div>
+
       <button 
         className={`${styles.toolButton} ${activeTool === 'select' ? styles.active : ''}`}
         onClick={() => onToolChange('select')}
@@ -65,59 +99,7 @@ export default function MapToolbar({
       >
         <Globe size={22} />
       </button>
-
-      <button 
-        className={styles.toolButton}
-        onClick={onPlayTimelapse}
-        title="Play Journey Timelapse"
-      >
-        <Play size={20} />
-      </button>
-
-      <div className={styles.divider}></div>
-
-      <button 
-        className={styles.toolButton}
-        onClick={onFly}
-        disabled={!hasStops}
-        title="3D Flyover Preview"
-      >
-        <Plane size={22} />
-      </button>
-
-      <div className={styles.divider}></div>
-
-      <button 
-        className={`${styles.toolButton} ${travelMode === 'driving' ? styles.active : ''}`}
-        onClick={() => onTravelModeChange('driving')}
-        title="Driving Mode"
-      >
-        <Car size={20} />
-      </button>
-
-      <button 
-        className={`${styles.toolButton} ${travelMode === 'walking' ? styles.active : ''}`}
-        onClick={() => onTravelModeChange('walking')}
-        title="Walking Mode"
-      >
-        <Footprints size={20} />
-      </button>
-
-      <button 
-        className={`${styles.toolButton} ${travelMode === 'cycling' ? styles.active : ''}`}
-        onClick={() => onTravelModeChange('cycling')}
-        title="Cycling Mode"
-      >
-        <Bike size={20} />
-      </button>
-
-      <button 
-        className={`${styles.toolButton} ${travelMode === 'transit' ? styles.active : ''}`}
-        onClick={() => onTravelModeChange('transit')}
-        title="Public Transit"
-      >
-        <Train size={20} />
-      </button>
     </div>
   );
 }
+
