@@ -10,6 +10,7 @@ import styles from './page.module.css';
 import { TripStop, TravelMode, Trip } from '@/types';
 import { optimizeRoute } from '@/utils/optimization';
 import { supabase } from '@/lib/supabase';
+import LoginModal from '@/components/LoginModal';
 
 export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -23,6 +24,8 @@ export default function Home() {
   const [showTerrain, setShowTerrain] = useState(false);
   const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/dark-v11');
   const [showBudgetDashboard, setShowBudgetDashboard] = useState(false);
+  const [user, setUser] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   
   const mapRef = useRef<MapRef>(null);
 
@@ -92,6 +95,10 @@ export default function Home() {
       setTrips([initialTrip]);
       setActiveTripId(initialTrip.id);
     }
+
+    const savedUser = localStorage.getItem('trip-planner-user');
+    if (savedUser) setUser(savedUser);
+    setIsLoaded(true);
   }, []);
 
   // Save active stops to the trips array
@@ -321,9 +328,27 @@ export default function Home() {
     window.open(url, '_blank');
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('trip-planner-user');
+    setUser(null);
+  };
+
+  const handleLogin = (name: string) => {
+    localStorage.setItem('trip-planner-user', name);
+    setUser(name);
+  };
+
+  if (!isLoaded) return null;
+
   return (
     <main className={styles.main}>
-      <Sidebar onToggleTripPanel={() => setShowTripPanel(!showTripPanel)} isPanelOpen={showTripPanel} />
+      {!user && <LoginModal onLogin={handleLogin} />}
+      <Sidebar 
+        onToggleTripPanel={() => setShowTripPanel(!showTripPanel)} 
+        isPanelOpen={showTripPanel} 
+        userName={user || ''}
+        onLogout={handleLogout}
+      />
       <TripPanel 
         isOpen={showTripPanel}
         onClose={() => setShowTripPanel(false)}

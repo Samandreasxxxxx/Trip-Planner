@@ -5,9 +5,11 @@ import { Compass, Map as MapIcon, Menu, Sun, Moon } from 'lucide-react';
 interface SidebarProps {
   onToggleTripPanel: () => void;
   isPanelOpen: boolean;
+  userName: string;
+  onLogout: () => void;
 }
 
-export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps) {
+export default function Sidebar({ onToggleTripPanel, isPanelOpen, userName, onLogout }: SidebarProps) {
   const [isLight, setIsLight] = React.useState(false);
 
   const toggleTheme = () => {
@@ -59,6 +61,16 @@ export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps
         <small>– Hans Christian Andersen</small>
       </div>
       <div className={styles.bottom}>
+        {userName && (
+          <div className={styles.profileBadge} title={`Logged in as ${userName}`}>
+            <div className={styles.avatar}>
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <button className={styles.logoutBtn} onClick={onLogout} title="Logout">
+              <X size={12} />
+            </button>
+          </div>
+        )}
         <button 
           className={styles.themeButton} 
           onClick={toggleTheme}
