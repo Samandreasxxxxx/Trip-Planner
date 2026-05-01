@@ -367,10 +367,16 @@ export default function Home() {
         onDeleteTrip={handleDeleteTrip}
         onRenameTrip={(id, name) => setTrips(prev => prev.map(t => t.id === id ? { ...t, name } : t))}
         onOptimizeDay={handleOptimizeDay}
+        onRenameTrip={handleRenameTrip}
+        onOptimizeDay={handleOptimizeDay}
         onShareTrip={handleShareTrip}
         getMapScreenshot={() => mapRef.current ? mapRef.current.getScreenshot() : Promise.resolve('')}
         onOpenInGoogleMaps={openInGoogleMaps}
         onToggleBudgetDashboard={() => setShowBudgetDashboard(!showBudgetDashboard)}
+        numPeople={activeTrip?.numPeople || 1}
+        onUpdateNumPeople={(num) => {
+          setTrips(prev => prev.map(t => t.id === activeTripId ? { ...t, numPeople: num } : t));
+        }}
       />
       <div className={`${styles.mapArea} ${showTripPanel ? styles.panelOpen : ''}`}>
         <SearchBar onSelect={handleSearchSelect} />

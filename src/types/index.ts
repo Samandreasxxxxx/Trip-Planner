@@ -27,5 +27,6 @@ export interface Trip {
   stops: TripStop[];
   createdAt: number;
   participants?: string[];
+  numPeople?: number;
 }
 

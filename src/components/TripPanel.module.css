@@ -1328,8 +1328,42 @@
   justify-content: space-between;
   align-items: center;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #fff;
+}
+
+.travelerControl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+}
+
+.numPeopleInput {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  width: 40px;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  text-align: center;
+  outline: none;
+}
+
+.numPeopleInput:focus {
+  border-color: var(--accent-primary);
+}
+
+.grandTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.totalAmount {
+  font-size: 1rem;
+  color: var(--accent-primary);
 }
 
 /* Stop Connector & Distance Badge */
