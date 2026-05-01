@@ -1202,3 +1202,95 @@
   cursor: pointer;
 }
 
+
+/* Financial Chart & Enhanced Budget */
+.financialChart {
+  display: flex;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chartSegment {
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.breakdownList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.breakdownLabelWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.categoryDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.totalBudgetFooter {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+/* Stop Connector & Distance Badge */
+.stopConnector {
+  position: absolute;
+  left: 42px;
+  top: 1.25rem;
+  bottom: -2.25rem;
+  width: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.connectorLine {
+  width: 2px;
+  flex: 1;
+  background: linear-gradient(to bottom, 
+    rgba(249, 115, 22, 0.5), 
+    rgba(249, 115, 22, 0.1) 100%
+  );
+  opacity: 0.3;
+}
+
+.distanceBadge {
+  background: #1a1a1e;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  color: #f97316;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  opacity: 0.9;
+}
+
+.stopCard:last-child .stopConnector {
+  display: none;
+}
