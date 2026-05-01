@@ -1,5 +1,8 @@
 .toolbar {
   position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   background: #000000;
   border: 1px solid #27272a;
   border-radius: 0px;

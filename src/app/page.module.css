@@ -50,5 +50,33 @@
   color: #000000;
 }
 
-:global(body.light) .lightIcon { display: none; }
-:global(body:not(.light)) .darkIcon { display: none; }
+.openPanelBtn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  background: #000000;
+  border: 1px solid #27272a;
+  border-left: none;
+  padding: 20px 8px;
+  cursor: pointer;
+  box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.openPanelBtn:hover {
+  background: #18181b;
+  padding-left: 12px;
+}
+
+.arrowIcon {
+  width: 0; 
+  height: 0; 
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 6px solid #ffffff;
+}

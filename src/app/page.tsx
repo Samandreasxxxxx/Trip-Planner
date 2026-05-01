@@ -350,16 +350,6 @@ export default function Home() {
       {showLoginModal && <LoginModal onLogin={(u) => { handleLogin(u); setShowLoginModal(false); }} />}
 
       <div className={styles.topRightNav}>
-        <button 
-          className={styles.navBtn} 
-          onClick={() => {
-            document.body.classList.toggle('light');
-          }}
-          title="Toggle Theme"
-        >
-          <Sun size={16} className={styles.lightIcon} />
-          <Moon size={16} className={styles.darkIcon} />
-        </button>
         {user ? (
           <button className={styles.navBtn} onClick={handleLogout} title="Sign Out">
             {user.slice(0, 1).toUpperCase()} <LogOut size={14} style={{marginLeft: '4px'}} />
@@ -371,7 +361,18 @@ export default function Home() {
         )}
       </div>
 
+      {!showTripPanel && (
+        <button 
+          className={styles.openPanelBtn}
+          onClick={() => setShowTripPanel(true)}
+          title="Open Trip Panel"
+        >
+          <div className={styles.arrowIcon}></div>
+        </button>
+      )}
+
       <TripPanel 
+
         isOpen={showTripPanel}
         onClose={() => setShowTripPanel(false)}
         stops={stops} 
