@@ -6,6 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import styles from './Map.module.css';
 import { TripStop, TravelMode } from '@/types';
 import { fetchDirections } from '@/utils/directions';
+import { calculateDistance } from '@/utils/distance';
 
 // Set the access token from your environment variables
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
@@ -15,6 +16,7 @@ interface MapProps {
   focusLocation: { lng: number; lat: number; id: string } | null;
   onMapClick: (lng: number, lat: number) => void;
   travelMode: TravelMode;
+  unit: 'km' | 'mi';
 }
 
 export interface MapRef {
@@ -22,7 +24,7 @@ export interface MapRef {
   startFlyover: () => void;
 }
 
-const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, travelMode }, ref) => {
+const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, travelMode, unit }, ref) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
@@ -163,6 +165,34 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
           'line-opacity': 0.8
         }
       });
+
+      // Add distance labels layer
+      map.addSource('distances', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: []
+        }
+      });
+
+      map.addLayer({
+        id: 'distance-labels',
+        type: 'symbol',
+        source: 'distances',
+        layout: {
+          'text-field': ['get', 'distance'],
+          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+          'text-size': 12,
+          'text-offset': [0, -1],
+          'text-anchor': 'bottom',
+          'text-allow-overlap': false
+        },
+        paint: {
+          'text-color': '#fff',
+          'text-halo-color': '#1a1a1e',
+          'text-halo-width': 2
+        }
+      });
     });
 
     mapRef.current.on('click', (e) => {
@@ -230,6 +260,41 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
             coordinates: pathCoords
           }
         });
+
+        // Update distance labels
+        const distanceSource = map.getSource('distances') as mapboxgl.GeoJSONSource;
+        if (distanceSource) {
+          const features = [];
+          for (let i = 0; i < stops.length - 1; i++) {
+            const s1 = stops[i];
+            const s2 = stops[i+1];
+            // Only show distance if same day or close together
+            if (s1.dayNumber === s2.dayNumber) {
+              const distKm = calculateDistance(s1.lat, s1.lng, s2.lat, s2.lng);
+              const dist = unit === 'km' ? distKm : distKm * 0.621371;
+              // Find midpoint in pathCoords for better placement
+              const startIdx = Math.floor((i / (stops.length - 1)) * pathCoords.length);
+              const endIdx = Math.floor(((i + 1) / (stops.length - 1)) * pathCoords.length);
+              const midIdx = Math.floor((startIdx + endIdx) / 2);
+              const midCoord = pathCoords[midIdx] || [ (s1.lng + s2.lng)/2, (s1.lat + s2.lat)/2 ];
+
+              features.push({
+                type: 'Feature',
+                properties: {
+                  distance: `${dist.toFixed(1)} ${unit}`
+                },
+                geometry: {
+                  type: 'Point',
+                  coordinates: midCoord
+                }
+              });
+            }
+          }
+          distanceSource.setData({
+            type: 'FeatureCollection',
+            features: features as any
+          });
+        }
       }
     };
 

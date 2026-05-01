@@ -318,6 +318,7 @@ export default function Home() {
           focusLocation={focusLocation} 
           onMapClick={handleMapClick} 
           travelMode={travelMode}
+          unit={unit}
         />
       </div>
     </main>

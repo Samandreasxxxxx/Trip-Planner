@@ -24,7 +24,7 @@ export default function MapToolbar({
       <button 
         className={`${styles.toolButton} ${activeTool === 'select' ? styles.active : ''}`}
         onClick={() => onToolChange('select')}
-        title="Selection Tool"
+        title="Selection Tool (Alt+H)"
       >
         <MousePointer2 size={22} />
       </button>

@@ -31,6 +31,17 @@ export default function Sidebar({ onToggleTripPanel, isPanelOpen }: SidebarProps
         <button className={`${styles.navItem} ${styles.active}`} title="Adventure Planner">
           <MapIcon size={24} />
         </button>
+        <button 
+          className={styles.navItem} 
+          title="Share My Journey"
+          onClick={() => {
+            const btn = document.querySelector('[title="Share Trip"]') as HTMLButtonElement;
+            if (btn) btn.click();
+            else alert("Add some stops to share your trip!");
+          }}
+        >
+          <Compass size={24} />
+        </button>
       </nav>
       
       <div className={styles.quoteSection}>

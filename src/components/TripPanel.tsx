@@ -90,6 +90,20 @@ export default function TripPanel({
   const [showBudgetBreakdown, setShowBudgetBreakdown] = useState(false);
   const [showAIPlanner, setShowAIPlanner] = useState(false);
   const [showExpenseSplitter, setShowExpenseSplitter] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+
+  // Show shortcut hint on mount
+  React.useEffect(() => {
+    const hasSeenHint = localStorage.getItem('hasSeenShortcutHint');
+    if (!hasSeenHint) {
+      setShowHint(true);
+      const timer = setTimeout(() => {
+        setShowHint(false);
+        localStorage.setItem('hasSeenShortcutHint', 'true');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId), [trips, activeTripId]);
 
@@ -272,34 +286,9 @@ export default function TripPanel({
 
     try {
       const mapContainer = document.querySelector('.mapboxgl-map') as HTMLElement;
-      const mapCanvas = document.querySelector('.mapboxgl-canvas') as HTMLCanvasElement;
-      if (!mapContainer || !mapCanvas) throw new Error("Map container not found");
+      if (!mapContainer) throw new Error("Map container not found");
 
       const mapDataUrl = await getMapScreenshot();
-      
-      const tempImg = document.createElement('img');
-      tempImg.src = mapDataUrl;
-      tempImg.style.position = 'absolute';
-      tempImg.style.top = '0';
-      tempImg.style.left = '0';
-      tempImg.style.width = '100%';
-      tempImg.style.height = '100%';
-      tempImg.style.zIndex = '0';
-      
-      mapCanvas.style.opacity = '0';
-      mapContainer.insertBefore(tempImg, mapContainer.firstChild);
-
-      const canvas = await html2canvas(mapContainer, {
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        backgroundColor: '#0a0a0c'
-      });
-
-      mapCanvas.style.opacity = '1';
-      tempImg.remove();
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.8);
       
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -309,75 +298,171 @@ export default function TripPanel({
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      // Page 1: Cover and Map
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(24);
-      pdf.text('Your Trip Itinerary', 15, 20);
-      
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(100);
-      pdf.text(`${stops.length} Stops • ${totalDistance.toFixed(0)} km Total Distance`, 15, 30);
-
-      const imgProps = pdf.getImageProperties(imgData);
       const margin = 15;
-      const maxWidth = pageWidth - (margin * 2);
-      const mapHeight = (imgProps.height * maxWidth) / imgProps.width;
-      
-      pdf.addImage(imgData, 'JPEG', margin, 40, maxWidth, mapHeight);
+      const contentWidth = pageWidth - (margin * 2);
 
-      // Page 2+: Details
-      pdf.addPage();
+      // --- Helper: Draw Logo ---
+      const addLogo = async () => {
+        try {
+          const logoUrl = '/logo.png'; // Path to the logo in public folder
+          pdf.addImage(logoUrl, 'PNG', pageWidth - 50, 10, 35, 12);
+        } catch (e) {
+          console.warn("Logo not found for PDF", e);
+        }
+      };
+
+      // --- Page 1: Cover ---
+      // Background Accent
+      pdf.setFillColor(249, 115, 22); // Orange-500
+      pdf.rect(0, 0, pageWidth, 40, 'F');
+      
+      await addLogo();
+
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(18);
-      pdf.setTextColor(0);
-      pdf.text('Itinerary Details', 15, 20);
-
-      let yPos = 35;
+      pdf.setFontSize(28);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('TRIP ITINERARY', margin, 25);
       
-      days.forEach(dayNum => {
-        if (yPos > pageHeight - 30) {
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(activeTrip?.name || 'My Adventure', margin, 34);
+
+      // Summary Box
+      let yPos = 55;
+      pdf.setFillColor(245, 245, 245);
+      pdf.roundedRect(margin, yPos, contentWidth, 30, 3, 3, 'F');
+      
+      pdf.setTextColor(60, 60, 60);
+      pdf.setFontSize(10);
+      pdf.text('STOPS', margin + 10, yPos + 10);
+      pdf.text('DISTANCE', margin + 45, yPos + 10);
+      pdf.text('DAYS', margin + 90, yPos + 10);
+      pdf.text('BUDGET', margin + 130, yPos + 10);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`${stops.length}`, margin + 10, yPos + 20);
+      pdf.text(`${totalDistance.toFixed(0)} ${unit}`, margin + 45, yPos + 20);
+      pdf.text(`${days.length}`, margin + 90, yPos + 20);
+      pdf.text(`$${totalBudget.toLocaleString()}`, margin + 130, yPos + 20);
+
+      // Map Section
+      yPos += 45;
+      pdf.setFontSize(12);
+      pdf.text('Route Overview', margin, yPos);
+      yPos += 5;
+
+      const imgProps = pdf.getImageProperties(mapDataUrl);
+      const mapHeight = (imgProps.height * contentWidth) / imgProps.width;
+      pdf.addImage(mapDataUrl, 'JPEG', margin, yPos, contentWidth, mapHeight);
+      
+      // --- Page 2+: Detailed Itinerary ---
+      pdf.addPage();
+      await addLogo();
+      
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Daily Schedule', margin, 20);
+      
+      yPos = 35;
+      
+      days.forEach((dayNum, dIdx) => {
+        // Day Header
+        if (yPos > pageHeight - 40) {
           pdf.addPage();
+          addLogo();
           yPos = 20;
         }
 
+        pdf.setFillColor(249, 115, 22, 0.1); // Light orange background for day header
+        pdf.rect(margin, yPos - 5, contentWidth, 10, 'F');
+        
         pdf.setFontSize(14);
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(249, 115, 22);
-        pdf.text(`Day ${dayNum}`, 15, yPos);
-        yPos += 10;
+        pdf.text(`DAY ${dayNum}`, margin + 5, yPos + 2);
+        yPos += 15;
 
-        groupedStops[dayNum].forEach((stop, index) => {
-          if (yPos > pageHeight - 30) {
+        const dayStops = groupedStops[dayNum];
+        dayStops.forEach((stop, sIdx) => {
+          if (yPos > pageHeight - 40) {
             pdf.addPage();
+            addLogo();
             yPos = 20;
           }
 
+          // Stop Time & Title
           pdf.setFontSize(11);
           pdf.setFont('helvetica', 'bold');
-          pdf.setTextColor(0);
-          const timeStr = stop.startTime ? `[${stop.startTime}] ` : '';
-          const title = `${timeStr}${stop.title}`;
-          const splitTitle = pdf.splitTextToSize(title, maxWidth - 10);
-          pdf.text(splitTitle, 20, yPos);
-          yPos += (splitTitle.length * 5) + 2;
+          pdf.setTextColor(0, 0, 0);
+          
+          const timeStr = stop.startTime ? `${stop.startTime}` : '--:--';
+          pdf.text(timeStr, margin + 5, yPos);
+          
+          const title = stop.title;
+          const splitTitle = pdf.splitTextToSize(title, contentWidth - 40);
+          pdf.text(splitTitle, margin + 25, yPos);
+          
+          // Cost and Category on the right
+          pdf.setFontSize(9);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(100);
+          if (stop.cost) {
+            pdf.text(`$${stop.cost.toFixed(2)}`, pageWidth - margin - 20, yPos, { align: 'right' });
+          }
+          if (stop.category) {
+            pdf.text(stop.category.toUpperCase(), pageWidth - margin - 5, yPos, { align: 'right' });
+          }
 
-          if (stop.description) {
-            pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(9);
-            pdf.setTextColor(100);
-            const splitDesc = pdf.splitTextToSize(stop.description, maxWidth - 15);
-            pdf.text(splitDesc, 20, yPos);
-            yPos += (splitDesc.length * 4) + 4;
+          yPos += (splitTitle.length * 5);
+
+          // Distance to next stop
+          if (sIdx < dayStops.length - 1) {
+            const nextStop = dayStops[sIdx + 1];
+            const dist = calculateDistance(stop.lat, stop.lng, nextStop.lat, nextStop.lng);
+            const displayDist = unit === 'km' ? dist : dist * 0.621371;
+            
+            pdf.setDrawColor(200);
+            pdf.setLineDashPattern([1, 1], 0);
+            pdf.line(margin + 30, yPos, margin + 30, yPos + 5);
+            pdf.setLineDashPattern([], 0);
+            
+            pdf.setFontSize(8);
+            pdf.setTextColor(150);
+            pdf.text(`↓ ${displayDist.toFixed(1)} ${unit}`, margin + 33, yPos + 4);
+            yPos += 8;
           } else {
-            yPos += 2;
+            yPos += 5;
+          }
+
+          // Description/Notes
+          if (stop.description) {
+            pdf.setFontSize(9);
+            pdf.setTextColor(80, 80, 80);
+            const splitDesc = pdf.splitTextToSize(`Notes: ${stop.description}`, contentWidth - 35);
+            pdf.text(splitDesc, margin + 25, yPos);
+            yPos += (splitDesc.length * 4) + 6;
           }
         });
-        yPos += 5;
+        yPos += 10;
       });
 
-      pdf.save('Trip-Itinerary.pdf');
+      // Footer on last page
+      pdf.setFontSize(8);
+      pdf.setTextColor(150);
+      pdf.text('Generated by Ghumoo With Us - Your Personal Trip Planner', pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+      pdf.save(`${activeTrip?.name || 'Trip'}-Itinerary.pdf`);
+
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
     } catch (error) {
       console.error("Error generating PDF:", error);
