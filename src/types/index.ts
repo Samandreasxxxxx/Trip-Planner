@@ -14,6 +14,11 @@ export interface TripStop {
   links?: string[];
   paidBy?: string;
   splitAmong?: string[];
+  rating?: number;
+  bestTime?: string;
+  bestTransport?: string;
+  proTip?: string;
+  imageUrl?: string;
 }
 
 export interface Trip {

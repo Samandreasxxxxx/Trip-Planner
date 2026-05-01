@@ -152,20 +152,39 @@ export default function Home() {
       const data = await res.json();
       
       const placeName = data.features?.[0]?.text || 'New Stop';
+      const insights = generateInsights(placeName, stopCategory || 'other');
       
       setStops(prev => prev.map(stop => 
-        stop.id === newId ? { ...stop, title: placeName } : stop
+        stop.id === newId ? { ...stop, title: placeName, ...insights } : stop
       ));
     } catch (e) {
       setStops(prev => prev.map(stop => 
         stop.id === newId ? { ...stop, title: 'New Stop' } : stop
       ));
     }
-  }, [activeTool]);
+  }, [activeTool, stops]);
+
+  const generateInsights = (name: string, category: string) => {
+    // Simulated AI insights based on name/category
+    const ratings: {[key: string]: number} = { 'Eiffel': 4.8, 'Louvre': 4.7, 'Disney': 4.6, 'Park': 4.5, 'Museum': 4.4 };
+    const bestTimes: {[key: string]: string} = { 'restaurant': 'Evenings (7pm-9pm)', 'hotel': 'Check-in (3pm)', 'sightseeing': 'Early Morning (8am)', 'park': 'Afternoon' };
+    const transport: {[key: string]: string} = { 'restaurant': 'Walk or Taxi', 'sightseeing': 'Public Transit', 'park': 'Cycling', 'hotel': 'Airport Shuttle' };
+    
+    const matchedKey = Object.keys(ratings).find(k => name.includes(k));
+    
+    return {
+      rating: matchedKey ? ratings[matchedKey] : (4.0 + Math.random() * 0.9),
+      bestTime: bestTimes[category] || '10:00 AM - 4:00 PM',
+      bestTransport: transport[category] || 'Public Transit',
+      proTip: `Known for its ${category === 'restaurant' ? 'local flavors' : 'amazing architecture'}. Avoid peak crowds by visiting on weekdays.`,
+      imageUrl: `https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=400&q=80` // Mock image
+    };
+  };
 
   const handleSearchSelect = (lng: number, lat: number, placeName: string) => {
     // Auto-add from search
     const newId = crypto.randomUUID();
+    const insights = generateInsights(placeName, 'other');
     setStops(prev => [...prev, {
       id: newId,
       lng,
@@ -173,7 +192,8 @@ export default function Home() {
       title: placeName,
       description: '',
       dayNumber: 1,
-      category: 'other'
+      category: 'other',
+      ...insights
     }]);
     setFocusLocation({ lng, lat, id: newId });
   };

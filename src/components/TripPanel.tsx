@@ -8,7 +8,8 @@ import {
   Bed, Utensils, Camera, Car, HelpCircle, DollarSign,
   FolderOpen, Edit2, X, Wand2, Sparkles, Share2,
   PieChart, Link as LinkIcon, ExternalLink,
-  Users, Receipt, Calendar, Navigation, CloudSun, Thermometer
+  Users, Receipt, Calendar, Navigation, CloudSun, Thermometer,
+  Star, Clock, Info, Map as MapIcon, Plane
 } from 'lucide-react';
 import { TripStop, Trip } from '@/types';
 import { calculateDistance } from '@/utils/distance';
@@ -979,7 +980,7 @@ function SortableStop({
     >
       <div className={styles.thumbnailWrapper}>
         <img 
-          src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${stop.lng},${stop.lat},14,0/80x80@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`} 
+          src={stop.imageUrl || `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${stop.lng},${stop.lat},14,0/80x80@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`} 
           alt={stop.title}
           className={styles.thumbnail}
         />
@@ -987,6 +988,12 @@ function SortableStop({
           <CategoryIcon category={stop.category} />
         </div>
         {stop.emoji && <div className={styles.emojiBadge}>{stop.emoji}</div>}
+        {stop.rating && (
+          <div className={styles.ratingBadge}>
+            <Star size={8} fill="#f59e0b" color="#f59e0b" />
+            <span>{stop.rating.toFixed(1)}</span>
+          </div>
+        )}
       </div>
       
       <div className={styles.stopCardLeft} {...attributes} {...listeners} style={{cursor: 'grab'}}>
@@ -1108,6 +1115,35 @@ function SortableStop({
             title="Other"
           />
         </div>
+
+        {(stop.bestTime || stop.bestTransport || stop.proTip) && (
+          <div className={styles.aiInsightsSection}>
+            <div className={styles.insightsHeader}>
+              <Sparkles size={10} />
+              <span>AI Insights</span>
+            </div>
+            <div className={styles.insightsGrid}>
+              {stop.bestTime && (
+                <div className={styles.insightItem} title="Best Time to Visit">
+                  <Clock size={10} />
+                  <span>{stop.bestTime}</span>
+                </div>
+              )}
+              {stop.bestTransport && (
+                <div className={styles.insightItem} title="Recommended Transport">
+                  <Car size={10} />
+                  <span>{stop.bestTransport}</span>
+                </div>
+              )}
+            </div>
+            {stop.proTip && (
+              <div className={styles.proTip}>
+                <Info size={10} />
+                <p>{stop.proTip}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <button 
