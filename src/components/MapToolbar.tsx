@@ -5,27 +5,35 @@ import styles from './MapToolbar.module.css';
 interface MapToolbarProps {
   activeTool: 'select' | 'pin';
   onToolChange: (tool: 'select' | 'pin') => void;
-  showTerrain: boolean;
-  onToggleTerrain: () => void;
   mapStyle: string;
   onCycleStyle: () => void;
+  onFitAll: () => void;
 }
 
 export default function MapToolbar({ 
   activeTool, 
   onToolChange, 
-  showTerrain,
-  onToggleTerrain,
-  onCycleStyle
+  mapStyle,
+  onCycleStyle,
+  onFitAll
 }: MapToolbarProps) {
   const [position, setPosition] = useState({ right: 24, top: 150 });
   const [isDragging, setIsDragging] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const handleResize = () => {
+      setPosition(prev => ({
+        ...prev,
+        top: Math.min(prev.top, window.innerHeight - 300)
+      }));
+    };
+    
     if (typeof window !== 'undefined') {
       setPosition({ right: 24, top: window.innerHeight / 2 - 100 });
+      window.addEventListener('resize', handleResize);
     }
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -84,13 +92,6 @@ export default function MapToolbar({
 
       <div className={styles.divider}></div>
 
-      <button 
-        className={`${styles.toolButton} ${showTerrain ? styles.active : ''}`}
-        onClick={onToggleTerrain}
-        title="Toggle 3D Terrain"
-      >
-        <div className={styles.terrainIcon}>3D</div>
-      </button>
 
       <button 
         className={styles.toolButton}
@@ -99,6 +100,17 @@ export default function MapToolbar({
       >
         <Globe size={16} />
       </button>
+
+      <div className={styles.divider}></div>
+
+      <button 
+        className={styles.toolButton}
+        onClick={onFitAll}
+        title="Zoom to All Stops"
+      >
+        <div style={{ transform: 'scale(0.8)' }}><Globe size={20} /></div>
+      </button>
+
     </div>
   );
 }

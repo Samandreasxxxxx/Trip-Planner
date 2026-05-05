@@ -389,6 +389,7 @@ export default function Home() {
         onCreateTrip={handleCreateTrip}
         onDeleteTrip={handleDeleteTrip}
         onRenameTrip={(id, name) => setTrips(prev => prev.map(t => t.id === id ? { ...t, name } : t))}
+        onUpdateTrip={(id, updates) => setTrips(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))}
         onOptimizeDay={handleOptimizeDay}
         onShareTrip={handleShareTrip}
         getMapScreenshot={() => mapRef.current ? mapRef.current.getScreenshot() : Promise.resolve('')}
@@ -415,10 +416,9 @@ export default function Home() {
         <MapToolbar 
           activeTool={activeTool} 
           onToolChange={setActiveTool} 
-          showTerrain={showTerrain}
-          onToggleTerrain={() => setShowTerrain(!showTerrain)}
           mapStyle={mapStyle}
           onCycleStyle={handleCycleStyle}
+          onFitAll={() => mapRef.current?.fitAll()}
         />
         <Map 
           ref={mapRef}
@@ -428,7 +428,6 @@ export default function Home() {
           travelMode={travelMode}
           unit={unit}
           mapStyle={mapStyle}
-          showTerrain={showTerrain}
         />
       </div>
     </main>

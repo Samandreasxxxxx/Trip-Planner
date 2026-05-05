@@ -1,5 +1,11 @@
 export type TravelMode = 'driving' | 'walking' | 'cycling' | 'transit';
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface TripStop {
   id: string;
   lng: number;
@@ -10,6 +16,8 @@ export interface TripStop {
   startTime?: string;
   category?: 'hotel' | 'restaurant' | 'sightseeing' | 'transport' | 'other';
   cost?: number;
+  isPaid?: boolean;
+  checklist?: ChecklistItem[];
   emoji?: string;
   links?: string[];
   paidBy?: string;
@@ -28,7 +36,8 @@ export interface Trip {
   createdAt: number;
   participants?: string[];
   numPeople?: number;
-  fixedCosts?: { id: string, name: string, cost: number, category: string }[];
+  currency?: string;
+  fixedCosts?: { id: string, name: string, cost: number, category: string, isPaid?: boolean }[];
 }
 
 

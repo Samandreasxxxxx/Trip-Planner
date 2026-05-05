@@ -1573,3 +1573,133 @@
   color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
 }
+
+/* New Styles for Enhanced Budgeting and Checklists */
+
+.currencySelect {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.paidToggle {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.paidToggle:hover {
+  opacity: 1;
+}
+
+.paidCost {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.05) !important;
+}
+
+.currencySymbol {
+  font-size: 0.75rem;
+  color: #52525b;
+  margin-right: 2px;
+}
+
+.checklistSection {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+}
+
+.checklistHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.addChecklistItemBtn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #52525b;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.addChecklistItemBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.checklistItems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #d4d4d8;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.checklistItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.checklistItem.completed {
+  opacity: 0.5;
+  text-decoration: line-through;
+  color: #71717a;
+}
+
+.checklistItem.completed svg {
+  color: #10b981;
+}
+
+.removeItemBtn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #3f3f46;
+  cursor: pointer;
+  padding: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.checklistItem:hover .removeItemBtn {
+  opacity: 1;
+}
+
+.removeItemBtn:hover {
+  color: #ef4444;
+}

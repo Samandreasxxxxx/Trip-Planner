@@ -9,7 +9,8 @@ import {
   FolderOpen, Edit2, X, Wand2, Sparkles, Share2,
   PieChart, Link as LinkIcon, ExternalLink,
   Users, Receipt, Calendar, Navigation, CloudSun, Thermometer,
-  Star, Info, Map as MapIcon, Plane, Clock
+  Star, Info, Map as MapIcon, Plane, Clock,
+  ListChecks, Circle, CheckCircle2, Wallet
 } from 'lucide-react';
 
 import { TripStop, Trip } from '@/types';
@@ -52,6 +53,7 @@ interface TripPanelProps {
   onCreateTrip: () => void;
   onDeleteTrip: (id: string) => void;
   onRenameTrip: (id: string, name: string) => void;
+  onUpdateTrip: (id: string, updates: Partial<Trip>) => void;
   onOptimizeDay: (dayNum: number) => void;
   onShareTrip: () => Promise<string | null>;
   getMapScreenshot: () => Promise<string>;
@@ -94,7 +96,8 @@ export default function TripPanel({
   onUpdateParticipants,
   onAddStops,
   fixedCosts,
-  onUpdateFixedCosts
+  onUpdateFixedCosts,
+  onUpdateTrip
 }: TripPanelProps) {
 
 
@@ -538,7 +541,7 @@ export default function TripPanel({
               <span className={styles.statLabel}>Days</span>
             </div>
             <div className={styles.statItem} onClick={() => setShowBudgetBreakdown(!showBudgetBreakdown)} style={{cursor: 'pointer'}} title="View Breakdown">
-              <span className={styles.statValue}>${totalBudget.toLocaleString()}</span>
+              <span className={styles.statValue}>{activeTrip?.currency || '$'}{totalBudget.toLocaleString()}</span>
               <span className={styles.statLabel}>Budget</span>
               <PieChart size={10} style={{marginTop: '2px', color: '#10b981'}} />
             </div>
@@ -547,8 +550,18 @@ export default function TripPanel({
               <div className={styles.budgetBreakdownOverlay}>
                 <div className={styles.breakdownHeader}>
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                    <PieChart size={16} />
+                    <Wallet size={16} />
                     <span>Cost Breakdown</span>
+                    <select 
+                      className={styles.currencySelect}
+                      value={activeTrip?.currency || '$'}
+                      onChange={(e) => onUpdateTrip(activeTripId, { currency: e.target.value })}
+                    >
+                      <option value="$">USD ($)</option>
+                      <option value="€">EUR (€)</option>
+                      <option value="₹">INR (₹)</option>
+                      <option value="£">GBP (£)</option>
+                    </select>
                   </div>
                   <button onClick={() => setShowBudgetBreakdown(false)}><X size={12} /></button>
                 </div>
@@ -631,7 +644,7 @@ export default function TripPanel({
                   </div>
                   <div className={styles.grandTotal}>
                     <span>Total Est.</span>
-                    <span className={styles.totalAmount}>${(totalBudget * numPeople).toLocaleString()}</span>
+                    <span className={styles.totalAmount}>{activeTrip?.currency || '$'}{(totalBudget * numPeople).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -690,6 +703,7 @@ export default function TripPanel({
                       participants={participants}
                       distanceFromPrev={stopDistances[stop.id]}
                       unit={unit}
+                      currency={activeTrip?.currency || '$'}
                     />
                   ))}
                 </SortableContext>
@@ -772,6 +786,7 @@ interface SortableStopProps {
   participants: string[];
   distanceFromPrev: number;
   unit: 'km' | 'mi';
+  currency: string;
 }
 
 function SortableStop({ 
@@ -784,7 +799,8 @@ function SortableStop({
   changeDay,
   participants,
   distanceFromPrev,
-  unit
+  unit,
+  currency
 }: SortableStopProps) {
   const {
     attributes,
@@ -867,15 +883,19 @@ function SortableStop({
             onClick={(e) => e.stopPropagation()}
           />
           <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-            <div className={styles.costWrapper}>
-            <DollarSign className={styles.costIcon} size={10} />
-            <input 
-              type="number"
-              className={styles.costInput}
-              value={stop.cost || 0}
-              onChange={(e) => onUpdateStop(stop.id, { cost: parseFloat(e.target.value) || 0 })}
-            />
-          </div>
+            <div className={`${styles.costWrapper} ${stop.isPaid ? styles.paidCost : ''}`} onClick={(e) => { e.stopPropagation(); onUpdateStop(stop.id, { isPaid: !stop.isPaid }); }}>
+              <div className={styles.paidToggle}>
+                {stop.isPaid ? <CheckCircle2 size={12} color="#10b981" /> : <Circle size={12} />}
+              </div>
+              <span className={styles.currencySymbol}>{currency}</span>
+              <input 
+                type="number"
+                className={styles.costInput}
+                value={stop.cost || 0}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => onUpdateStop(stop.id, { cost: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
           {participants.length > 0 && (
             <select 
               className={styles.paidBySelect}
@@ -994,13 +1014,14 @@ function StopInputs({
   const emojis = ['📍', '✈️', '🏨', '🍽️', '🏛️', '🎭', '🌳', '🏖️', '⛰️', '🚗', '🚶', '🚲', '📸', '☕', '🍷', '🍦'];
 
   React.useEffect(() => { 
-    if (stop.title !== title) setTitle(stop.title); 
-  }, [stop.title, title]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTitle(stop.title); 
+  }, [stop.title]);
   
   React.useEffect(() => { 
-    const currentDesc = stop.description || '';
-    if (currentDesc !== desc) setDesc(currentDesc); 
-  }, [stop.description, desc]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDesc(stop.description || ''); 
+  }, [stop.description]);
 
 
   return (
@@ -1060,6 +1081,53 @@ function StopInputs({
         rows={1}
       />
 
+
+      <div className={styles.checklistSection}>
+        <div className={styles.checklistHeader}>
+          <ListChecks size={12} />
+          <span>Checklist</span>
+          <button 
+            className={styles.addChecklistItemBtn}
+            onClick={() => {
+              const text = prompt('Task:');
+              if (text) {
+                const newItem = { id: crypto.randomUUID(), text, completed: false };
+                onUpdateStop(stop.id, { checklist: [...(stop.checklist || []), newItem] });
+              }
+            }}
+          >
+            <Plus size={10} />
+          </button>
+        </div>
+        {stop.checklist && stop.checklist.length > 0 && (
+          <div className={styles.checklistItems}>
+            {stop.checklist.map(item => (
+              <div 
+                key={item.id} 
+                className={`${styles.checklistItem} ${item.completed ? styles.completed : ''}`}
+                onClick={() => {
+                  const newChecklist = stop.checklist?.map(i => 
+                    i.id === item.id ? { ...i, completed: !i.completed } : i
+                  );
+                  onUpdateStop(stop.id, { checklist: newChecklist });
+                }}
+              >
+                {item.completed ? <CheckCircle2 size={10} /> : <Circle size={10} />}
+                <span>{item.text}</span>
+                <button 
+                  className={styles.removeItemBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUpdateStop(stop.id, { checklist: stop.checklist?.filter(i => i.id !== item.id) });
+                  }}
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className={styles.linksSection}>
         <div className={styles.linksHeader}>

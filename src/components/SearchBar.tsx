@@ -10,6 +10,7 @@ interface SearchResult {
   text: string;
   context?: { text: string }[];
   center: [number, number];
+  isCoordinate?: boolean;
 }
 
 interface SearchBarProps {
@@ -59,6 +60,19 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
+        const coordinateMatch = parseCoordinates(query);
+        let finalResults: SearchResult[] = [];
+
+        if (coordinateMatch) {
+          finalResults.push({
+            id: 'coord-' + Date.now(),
+            place_name: `Go to ${coordinateMatch.lat}, ${coordinateMatch.lng}`,
+            text: `${coordinateMatch.lat}, ${coordinateMatch.lng}`,
+            center: [coordinateMatch.lng, coordinateMatch.lat],
+            isCoordinate: true
+          });
+        }
+
         // Types included to find smallest cities, localities, etc.
         const types = 'country,region,postcode,district,place,locality,neighborhood,address,poi';
         const response = await fetch(
@@ -67,7 +81,12 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
           )}.json?access_token=${token}&limit=10&types=${types}&autocomplete=true`
         );
         const data = await response.json();
-        setResults(data.features || []);
+        
+        if (data.features) {
+          finalResults = [...finalResults, ...data.features];
+        }
+
+        setResults(finalResults);
         setShowDropdown(true);
       } catch (error) {
         console.error('Search error:', error);
@@ -78,6 +97,20 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
 
     return () => clearTimeout(timer);
   }, [query, token]);
+
+  const parseCoordinates = (input: string) => {
+    // Matches "lat, lng" or "lat lng"
+    const regex = /^([-+]?\d{1,2}(?:\.\d+)?)[,\s]\s*([-+]?\d{1,3}(?:\.\d+)?)$/;
+    const match = input.trim().match(regex);
+    if (match) {
+      const lat = parseFloat(match[1]);
+      const lng = parseFloat(match[2]);
+      if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+        return { lat, lng };
+      }
+    }
+    return null;
+  };
 
   const handleSelect = (result: SearchResult) => {
     onSelect(result.center[0], result.center[1], result.place_name);
@@ -159,16 +192,18 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
               {results.map((result) => (
                 <div
                   key={result.id}
-                  className={styles.resultItem}
+                  className={`${styles.resultItem} ${result.isCoordinate ? styles.coordinateResult : ''}`}
                   onClick={() => handleSelect(result)}
                 >
                   <div className={styles.resultPin}>
-                    <MapPin size={14} />
+                    {result.isCoordinate ? <Globe size={14} className={styles.coordIcon} /> : <MapPin size={14} />}
                   </div>
                   <div className={styles.resultText}>
                     <span className={styles.placeTitle}>{result.text}</span>
                     <span className={styles.placeDetails}>
-                      {result.context?.map(c => c.text).join(', ') || result.place_name}
+                      {result.isCoordinate 
+                        ? 'Direct coordinate marking' 
+                        : (result.context?.map(c => c.text).join(', ') || result.place_name)}
                     </span>
                   </div>
                 </div>

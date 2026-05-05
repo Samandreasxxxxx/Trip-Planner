@@ -18,16 +18,16 @@ interface MapProps {
   travelMode: TravelMode;
   unit: 'km' | 'mi';
   mapStyle: string;
-  showTerrain: boolean;
 }
 
 export interface MapRef {
   getScreenshot: () => Promise<string>;
   startFlyover: () => void;
   playTimeLapse: () => void;
+  fitAll: () => void;
 }
 
-const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, travelMode, unit, mapStyle, showTerrain }, ref) => {
+const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, travelMode, unit, mapStyle }, ref) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
@@ -44,37 +44,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
       map.triggerRepaint();
     }),
     startFlyover: () => {
-      const map = mapRef.current;
-      if (!map || stops.length === 0) return;
-
-      let stopIndex = 0;
-      
-      const flyToNext = () => {
-        if (stopIndex >= stops.length) {
-          // Reset to overview
-          const bounds = new mapboxgl.LngLatBounds();
-          stops.forEach(s => bounds.extend([s.lng, s.lat]));
-          map.fitBounds(bounds, { padding: 80, duration: 2000, pitch: 0, bearing: 0 });
-          return;
-        }
-
-        const stop = stops[stopIndex];
-        map.flyTo({
-          center: [stop.lng, stop.lat],
-          zoom: 15,
-          pitch: 60,
-          bearing: (stopIndex * 45) % 360,
-          duration: 3000,
-          essential: true
-        });
-
-        stopIndex++;
-        map.once('moveend', () => {
-          setTimeout(flyToNext, 1000);
-        });
-      };
-
-      flyToNext();
+      // Feature archived
     },
     playTimeLapse: () => {
       const map = mapRef.current;
@@ -96,6 +66,13 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
         requestAnimationFrame(animate);
       };
       animate();
+    },
+    fitAll: () => {
+      const map = mapRef.current;
+      if (!map || stops.length === 0) return;
+      const bounds = new mapboxgl.LngLatBounds();
+      stops.forEach(s => bounds.extend([s.lng, s.lat]));
+      map.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 2000 });
     }
   }));
 
@@ -128,24 +105,7 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
       const map = mapRef.current;
       if (!map) return;
 
-      // Add 3D terrain
-      map.addSource('mapbox-dem', {
-        'type': 'raster-dem',
-        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        'tileSize': 512
-      });
-      map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-
-      // Add sky layer
-      map.addLayer({
-        'id': 'sky',
-        'type': 'sky',
-        'paint': {
-          'sky-type': 'atmosphere',
-          'sky-atmosphere-sun': [0.0, 0.0],
-          'sky-atmosphere-sun-intensity': 15
-        }
-      });
+      // 3D features archived for performance
 
       // Add route source and layer
       map.addSource('route', {
@@ -248,56 +208,10 @@ const Map = forwardRef<MapRef, MapProps>(({ stops, focusLocation, onMapClick, tr
     });
   }, [mapStyle]);
 
-  // Handle Terrain Changes
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    const updateTerrain = () => {
-      if (showTerrain) {
-        if (!map.getSource('mapbox-dem')) {
-          map.addSource('mapbox-dem', {
-            'type': 'raster-dem',
-            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-            'tileSize': 512
-          });
-        }
-        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-      } else {
-        map.setTerrain(null as any);
-      }
-    };
-
-    if (map.isStyleLoaded()) {
-      updateTerrain();
-    } else {
-      map.once('style.load', updateTerrain);
-    }
-  }, [showTerrain]);
+  // Handle Terrain Changes archived
 
   const initMapLayers = (map: mapboxgl.Map) => {
-      // Re-add 3D terrain
-      if (!map.getSource('mapbox-dem')) {
-        map.addSource('mapbox-dem', {
-          'type': 'raster-dem',
-          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-          'tileSize': 512
-        });
-      }
-      if (showTerrain) map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-
-      // Add sky layer
-      if (!map.getLayer('sky')) {
-        map.addLayer({
-          'id': 'sky',
-          'type': 'sky',
-          'paint': {
-            'sky-type': 'atmosphere',
-            'sky-atmosphere-sun': [0.0, 0.0],
-            'sky-atmosphere-sun-intensity': 15
-          }
-        });
-      }
+      // 3D features archived for performance
 
       // Add route source and layer
       if (!map.getSource('route')) {
